@@ -186,61 +186,75 @@
 
             <!-- KV Schritt 3 / Mario Schritt 2: Termin -->
             <section class="editor-step-panel" data-kv-step="2" data-mario-step="1">
-              <div class="editor-form-grid">
-                <label class="form-field">
-                  <span>Datum</span>
-                  <input type="date" id="editor-fDatum" required>
-                </label>
+              <div class="editor-blocks">
 
-                <label class="form-field form-field-full" data-editor-only="kv">
-                  <span>Schnellauswahl Uhrzeit</span>
+                <!-- Datum -->
+                <div class="editor-field-block">
+                  <label class="form-field">
+                    <span>Datum</span>
+                    <input type="date" id="editor-fDatum" required>
+                  </label>
+                </div>
+
+                <!-- Einlass + Beginn (nur KV) -->
+                <div class="editor-field-block" data-editor-only="kv">
                   <div class="quick-chip-row">
                     <button class="quick-chip" type="button" data-action="quick-set-time" data-event-type="kv" data-einlass="15:00" data-beginn="16:00">15:00 · 16:00</button>
                     <button class="quick-chip" type="button" data-action="quick-set-time" data-event-type="kv" data-einlass="16:00" data-beginn="17:00">16:00 · 17:00</button>
                     <button class="quick-chip" type="button" data-action="quick-set-time" data-event-type="kv" data-einlass="14:00" data-beginn="15:00">14:00 · 15:00</button>
                     <button class="quick-chip" type="button" data-action="quick-set-time" data-event-type="kv" data-einlass="11:00" data-beginn="12:00">11:00 · 12:00</button>
                   </div>
-                </label>
+                  <div class="editor-time-row">
+                    <label class="form-field">
+                      <span>Einlass</span>
+                      <input type="time" id="editor-fEinlass">
+                    </label>
+                    <label class="form-field">
+                      <span>Beginn</span>
+                      <input type="time" id="editor-fBeginn">
+                    </label>
+                  </div>
+                </div>
 
-                <label class="form-field">
-                  <span>Ort</span>
+                <!-- Ort (beide Typen) -->
+                <div class="editor-field-block">
                   <div class="quick-chip-row" data-editor-only="kv">
                     <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fOrt" data-value="Kaufmuseum Weißensee, Berliner Allee 120, 13088 Berlin">Kaufmuseum Weißensee</button>
                   </div>
                   <div class="quick-chip-row" data-editor-only="mario">
                     <button class="quick-chip quick-chip-mario" type="button" data-action="quick-set-field" data-field-id="editor-fOrt" data-value="Kaufmuseum Weißensee, Berliner Allee 120, 13088 Berlin">Kaufmuseum Weißensee</button>
                   </div>
-                  <input type="text" id="editor-fOrt" maxlength="180">
-                </label>
+                  <label class="form-field">
+                    <span>Ort</span>
+                    <input type="text" id="editor-fOrt" maxlength="180">
+                  </label>
+                </div>
 
-                <label class="form-field" data-editor-only="kv">
-                  <span>Einlass</span>
-                  <input type="time" id="editor-fEinlass">
-                </label>
-
-                <label class="form-field" data-editor-only="kv">
-                  <span>Beginn</span>
-                  <input type="time" id="editor-fBeginn">
-                </label>
-
-                <label class="form-field form-field-full" data-editor-only="kv">
-                  <span>Preis</span>
+                <!-- Preis (nur KV) -->
+                <div class="editor-field-block" data-editor-only="kv">
                   <div class="quick-chip-row">
                     <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="30,00 € p.P. inkl. Buffet und Getränke">30 € inkl. Buffet</button>
                     <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="45,00 € p.P. inkl. Buffet und Getränke">45 € inkl. Buffet</button>
                     <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="Kaffee & Kuchen inklusive">Kaffee &amp; Kuchen</button>
                     <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="Eintritt frei">Eintritt frei</button>
                   </div>
-                  <input type="text" id="editor-fPreis" maxlength="120">
-                </label>
+                  <label class="form-field">
+                    <span>Preis</span>
+                    <input type="text" id="editor-fPreis" maxlength="120">
+                  </label>
+                </div>
 
-                <label class="form-field form-field-full" data-editor-only="kv">
-                  <span>Telefon</span>
+                <!-- Telefon (nur KV) -->
+                <div class="editor-field-block" data-editor-only="kv">
                   <div class="quick-chip-row">
                     <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fTelefon" data-value="030 92 40 73 91">030 92 40 73 91</button>
                   </div>
-                  <input type="text" id="editor-fTelefon" maxlength="80">
-                </label>
+                  <label class="form-field">
+                    <span>Telefon</span>
+                    <input type="text" id="editor-fTelefon" maxlength="80">
+                  </label>
+                </div>
+
               </div>
             </section>
 
@@ -318,9 +332,9 @@
 
       <footer class="editor-footer">
         <button class="secondary-button" type="button" id="editorCancelButton">Abbrechen</button>
-        <button class="secondary-button" type="button" id="editorPrevButton">Zurück</button>
+        <button class="secondary-button" type="button" id="editorPrevButton" hidden>Zurück</button>
         <button class="secondary-button" type="button" id="editorNextButton">Weiter</button>
-        <button class="primary-button" type="submit" form="editorForm" id="editorSaveButton">Speichern</button>
+        <button class="primary-button" type="submit" form="editorForm" id="editorSaveButton" hidden>Speichern</button>
       </footer>
     </section>
   </div>
