@@ -1542,7 +1542,7 @@ function validateDraft(type, draft) {
   if (type === "mario" && draft.link && !/^https?:\/\//i.test(draft.link)) {
     return "Mario-Links müssen mit http:// oder https:// beginnen.";
   }
-  if (draft.bild && !/^https?:\/\//i.test(draft.bild)) {
+  if (draft.bild && !/^(https?:\/\/|data:image\/)/i.test(draft.bild)) {
     return "Die Bild-URL muss mit http:// oder https:// beginnen.";
   }
   return "";
