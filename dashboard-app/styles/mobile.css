@@ -287,6 +287,10 @@
     display: none;
   }
 
+  .editor-time-row {
+    grid-template-columns: 1fr;
+  }
+
   /* Confirm Dialog auf Phone — vertikal stapeln (3-Button-Fall) */
   .confirm-panel {
     width: calc(100% - 24px);

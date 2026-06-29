@@ -1265,7 +1265,7 @@
 
 .quick-chip {
   border: 1px solid rgba(16, 24, 40, 0.08);
-  border-radius: 999px;
+  border-radius: 7px;
   background: rgba(255, 255, 255, 0.9);
   color: #344054;
   padding: 8px 14px;
@@ -2106,6 +2106,20 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
+}
+
+.editor-time-row .form-field {
+  min-width: 0;
+}
+
+.editor-time-row input[type="time"] {
+  width: 100%;
+  min-width: 0;
+}
+
+.editor-field-block .quick-chip-row {
+  margin-top: 0;
+  justify-content: center;
 }
 
 /* ── Editor: Bild-Upload-Block (KV Schritt 1) ── */
