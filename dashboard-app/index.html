@@ -1,0 +1,340 @@
+﻿<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Dashboard</title>
+  <meta name="theme-color" content="#111827">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="stylesheet" href="./styles/base.css">
+  <link rel="stylesheet" href="./styles/app.css">
+  <link rel="stylesheet" href="./styles/mobile.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-block">
+        <div class="brand-mark">MM</div>
+        <div>
+          <p class="eyebrow">Neues Dashboard</p>
+          <h1>Eventverwaltung</h1>
+        </div>
+      </div>
+
+      <nav class="top-tabs" aria-label="Dashboard Bereiche">
+        <button class="top-tab is-active" type="button" data-tab="home">Start</button>
+        <button class="top-tab" type="button" data-tab="kv">Kulturverein</button>
+        <button class="top-tab" type="button" data-tab="mario">Mario</button>
+      </nav>
+
+      <div class="top-actions">
+        <a class="utility-link" href="https://eu.jotform.com/build/251081662723050" target="_blank" rel="noopener noreferrer">
+          Jotform
+        </a>
+        <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Navigation öffnen"></button>
+      </div>
+    </header>
+
+    <div class="mobile-nav" id="mobileNav" hidden>
+      <button class="mobile-nav-link is-active" type="button" data-tab="home">Start</button>
+      <button class="mobile-nav-link" type="button" data-tab="kv">Kulturverein</button>
+      <button class="mobile-nav-link" type="button" data-tab="mario">Mario</button>
+    </div>
+
+    <main class="workspace">
+      <section class="workspace-main">
+        <div class="tab-panel is-active" id="panel-home">
+          <section class="intro-strip">
+            <div>
+              <p class="eyebrow">Arbeitsfläche</p>
+              <h2>Ein neues Dashboard für Desktop und Smartphone</h2>
+              <p class="support-copy">
+                Das ist das neue Grundgerüst. Hier bauen wir die Startseite, Listen, Editor-Flächen und mobile Bedienung modular weiter aus.
+              </p>
+            </div>
+            <div class="intro-actions">
+              <button class="primary-button" type="button" id="create-kv-button">Neues Vereins-Event</button>
+              <button class="secondary-button" type="button" id="create-mario-button">Neuen Mario-Termin</button>
+            </div>
+          </section>
+
+          <section class="surface-grid">
+            <article class="surface-block">
+              <div class="surface-head">
+                <div>
+                  <p class="eyebrow">Kulturverein</p>
+                  <h3>Aktive Einträge</h3>
+                </div>
+                <span class="status-pill status-live" id="home-kv-count">0 aktiv</span>
+              </div>
+              <div class="event-stack" id="home-kv-list"></div>
+            </article>
+
+            <article class="surface-block surface-block-accent">
+              <div class="surface-head">
+                <div>
+                  <p class="eyebrow">Mario Marschall</p>
+                  <h3>Nächste Termine</h3>
+                </div>
+                <span class="status-pill status-warm" id="home-mario-count">0 offen</span>
+              </div>
+              <div class="event-stack" id="home-mario-list"></div>
+            </article>
+          </section>
+        </div>
+
+        <div class="tab-panel" id="panel-kv">
+          <section class="panel-layout">
+            <article class="surface-block">
+              <div class="surface-head">
+                <div>
+                  <p class="eyebrow">Bereich</p>
+                  <h3>Kulturverein Weißensee</h3>
+                </div>
+                <span class="status-pill status-live" id="kv-count">0 gesamt</span>
+              </div>
+              <p class="support-copy">Erste Lesestufe: aktive und inaktive Vereins-Events direkt aus Firestore.</p>
+              <div class="event-stack event-stack-wide" id="kv-list"></div>
+            </article>
+          </section>
+        </div>
+
+        <div class="tab-panel" id="panel-mario">
+          <section class="panel-layout">
+            <article class="surface-block surface-block-accent">
+              <div class="surface-head">
+                <div>
+                  <p class="eyebrow">Bereich</p>
+                  <h3>Mario Marschall</h3>
+                </div>
+                <div class="surface-head-aside">
+                  <span class="status-pill status-warm" id="mario-count">0 gesamt</span>
+                  <button class="secondary-button surface-new-btn" type="button" data-action="create-event" data-event-type="mario">+ Neuer Termin</button>
+                </div>
+              </div>
+              <div class="event-stack event-stack-wide" id="mario-list"></div>
+            </article>
+          </section>
+        </div>
+      </section>
+
+      <aside class="workspace-side">
+        <section class="preview-card">
+          <div class="surface-head">
+            <div>
+              <p class="eyebrow">Inspector</p>
+              <h3>Vorschau &amp; Nächste Schritte</h3>
+            </div>
+          </div>
+
+          <div class="preview-stage" id="inspector-stage"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="editor-modal" id="editorModal" hidden>
+    <div class="editor-backdrop" data-editor-close></div>
+    <section class="editor-panel" role="dialog" aria-modal="true" aria-labelledby="editorHeading">
+      <header class="editor-header">
+        <div>
+          <p class="eyebrow" id="editorEyebrow">Neuer Eintrag</p>
+          <h2 id="editorHeading">Event bearbeiten</h2>
+        </div>
+        <button class="icon-button" type="button" id="editorCloseButton" aria-label="Editor schließen">x</button>
+      </header>
+
+      <div class="editor-layout">
+        <form class="editor-form" id="editorForm">
+          <div class="editor-step-shell">
+            <div class="editor-step-nav" id="editorStepNav"></div>
+            <p class="support-copy editor-step-copy" id="editorStepCopy"></p>
+
+            <section class="editor-step-panel" data-editor-step="0">
+              <div class="editor-form-grid">
+                <label class="form-field form-field-full">
+                  <span>Titel</span>
+                  <input type="text" id="editor-fTitel" maxlength="140" required>
+                </label>
+
+                <label class="form-field form-field-full" data-editor-only="kv">
+                  <span>Untertitel</span>
+                  <input type="text" id="editor-fUntertitel" maxlength="160">
+                </label>
+
+                <label class="form-field form-field-full">
+                  <span>Beschreibung</span>
+                  <textarea id="editor-fBeschreibung" rows="5"></textarea>
+                </label>
+              </div>
+            </section>
+
+            <section class="editor-step-panel" data-editor-step="1" hidden>
+              <div class="editor-form-grid">
+                <label class="form-field">
+                  <span>Datum</span>
+                  <input type="date" id="editor-fDatum" required>
+                </label>
+
+                <label class="form-field form-field-full" data-editor-only="kv">
+                  <span>Schnellauswahl Uhrzeit</span>
+                  <div class="quick-chip-row">
+                    <button class="quick-chip" type="button" data-action="quick-set-time" data-event-type="kv" data-einlass="15:00" data-beginn="16:00">15:00 · 16:00</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-time" data-event-type="kv" data-einlass="16:00" data-beginn="17:00">16:00 · 17:00</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-time" data-event-type="kv" data-einlass="14:00" data-beginn="15:00">14:00 · 15:00</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-time" data-event-type="kv" data-einlass="11:00" data-beginn="12:00">11:00 · 12:00</button>
+                  </div>
+                </label>
+
+                <label class="form-field">
+                  <span>Ort</span>
+                  <div class="quick-chip-row" data-editor-only="kv">
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fOrt" data-value="Kaufmuseum Weißensee, Berliner Allee 120, 13088 Berlin">Kaufmuseum Weißensee</button>
+                  </div>
+                  <div class="quick-chip-row" data-editor-only="mario">
+                    <button class="quick-chip quick-chip-mario" type="button" data-action="quick-set-field" data-field-id="editor-fOrt" data-value="Kaufmuseum Weißensee, Berliner Allee 120, 13088 Berlin">Kaufmuseum Weißensee</button>
+                  </div>
+                  <input type="text" id="editor-fOrt" maxlength="180">
+                </label>
+
+                <label class="form-field" data-editor-only="kv">
+                  <span>Einlass</span>
+                  <input type="time" id="editor-fEinlass">
+                </label>
+
+                <label class="form-field" data-editor-only="kv">
+                  <span>Beginn</span>
+                  <input type="time" id="editor-fBeginn">
+                </label>
+
+                <label class="form-field" data-editor-only="kv">
+                  <span>Preis</span>
+                  <input type="text" id="editor-fPreis" maxlength="120">
+                </label>
+
+                <label class="form-field" data-editor-only="kv">
+                  <span>Telefon</span>
+                  <input type="text" id="editor-fTelefon" maxlength="80">
+                </label>
+              </div>
+            </section>
+
+            <section class="editor-step-panel" data-editor-step="2" hidden>
+              <div class="editor-form-grid">
+                <label class="form-field form-field-full" data-editor-only="mario">
+                  <span>Button-Vorlage</span>
+                  <input type="hidden" id="editor-fLinkPreset" value="more">
+                  <div class="shortcut-grid">
+                    <button type="button" class="shortcut-card" id="editor-preset-ticket" data-action="select-mario-preset" data-preset="ticket">
+                      <strong>Ticket reservieren</strong>
+                      <span>Reservierungslink wird automatisch gesetzt.</span>
+                    </button>
+                    <button type="button" class="shortcut-card" id="editor-preset-more" data-action="select-mario-preset" data-preset="more">
+                      <strong>Mehr erfahren</strong>
+                      <span>Feste Bezeichnung, freier Ziel-Link.</span>
+                    </button>
+                    <button type="button" class="shortcut-card" id="editor-preset-custom" data-action="select-mario-preset" data-preset="custom">
+                      <strong>Individuell</strong>
+                      <span>Button-Text und Link frei festlegen.</span>
+                    </button>
+                  </div>
+                </label>
+
+                <label class="form-field" data-editor-only="mario">
+                  <span>Button-Label</span>
+                  <input type="text" id="editor-fButtonLabel" maxlength="80">
+                </label>
+
+                <label class="form-field form-field-full" data-editor-only="mario">
+                  <span>Link</span>
+                  <input type="url" id="editor-fLink" placeholder="https://...">
+                  <small class="field-note" id="editorLinkHint">Kein Link = kein Button auf der Website.</small>
+                </label>
+
+                <label class="form-field form-field-full">
+                  <span>Bild-URL</span>
+                  <input type="url" id="editor-fBild" placeholder="https://...">
+                </label>
+
+                <label class="form-field form-field-full" data-editor-only="kv">
+                  <span>Preis</span>
+                  <div class="quick-chip-row">
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="30,00 € p.P. inkl. Buffet und Getränke">30 € inkl. Buffet</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="45,00 € p.P. inkl. Buffet und Getränke">45 € inkl. Buffet</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="Kaffee & Kuchen inklusive">Kaffee & Kuchen</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="Eintritt frei">Eintritt frei</button>
+                  </div>
+                </label>
+
+                <label class="form-field form-field-full" data-editor-only="kv">
+                  <span>Telefon</span>
+                  <div class="quick-chip-row">
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fTelefon" data-value="030 92 40 73 91">030 92 40 73 91</button>
+                  </div>
+                </label>
+              </div>
+
+              <div class="toggle-grid">
+                <label class="toggle-field">
+                  <input type="checkbox" id="editor-fAktiv" checked>
+                  <span>Eintrag aktiv anzeigen</span>
+                </label>
+
+                <label class="toggle-field" data-editor-only="kv">
+                  <input type="checkbox" id="editor-fTicketDone">
+                  <span>Ticketformular bereits erledigt</span>
+                </label>
+
+                <label class="toggle-field" id="editorCrossPublishField">
+                  <input type="checkbox" id="editor-fCrossPublish">
+                  <span id="editorCrossPublishLabel">Auch auf der anderen Plattform speichern</span>
+                </label>
+              </div>
+            </section>
+          </div>
+        </form>
+
+        <aside class="editor-preview-card">
+          <div class="surface-head">
+            <div>
+              <p class="eyebrow">Live-Vorschau</p>
+              <h3>So wirkt der Eintrag</h3>
+            </div>
+          </div>
+
+          <div class="editor-preview-stage" id="editorPreviewStage"></div>
+        </aside>
+      </div>
+
+      <footer class="editor-footer">
+        <button class="secondary-button" type="button" id="editorCancelButton">Abbrechen</button>
+        <button class="secondary-button" type="button" id="editorPrevButton">Zurück</button>
+        <button class="secondary-button" type="button" id="editorNextButton">Weiter</button>
+        <button class="primary-button" type="submit" form="editorForm" id="editorSaveButton">Speichern</button>
+      </footer>
+    </section>
+  </div>
+
+  <div class="confirm-modal" id="confirmModal" hidden>
+    <div class="editor-backdrop" data-confirm-close></div>
+    <section class="confirm-panel" role="dialog" aria-modal="true" aria-labelledby="confirmHeading">
+      <p class="eyebrow">Sicherheitsabfrage</p>
+      <h3 id="confirmHeading">Eintrag löschen?</h3>
+      <p class="support-copy" id="confirmMessage">
+        Dieser Eintrag wird dauerhaft aus Firestore entfernt.
+      </p>
+      <div class="confirm-actions">
+        <button class="secondary-button" type="button" id="confirmCancelButton">Abbrechen</button>
+        <button class="secondary-button" type="button" id="confirmDeleteSingleButton" hidden>Nur diesen löschen</button>
+        <button class="danger-button" type="button" id="confirmDeleteButton">Endgültig löschen</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
+
+  <script type="module" src="./scripts/app.js"></script>
+</body>
+</html>
+
+
