@@ -150,7 +150,22 @@
             <div class="editor-step-nav" id="editorStepNav"></div>
             <p class="support-copy editor-step-copy" id="editorStepCopy"></p>
 
-            <section class="editor-step-panel" data-editor-step="0">
+            <!-- KV Schritt 1: Bild -->
+            <section class="editor-step-panel" data-kv-step="0">
+              <div class="editor-img-block">
+                <div class="editor-img-preview" id="editorImgPreview">
+                  <span class="editor-img-icon">&#128247;</span>
+                  <span class="editor-img-hint">Bild vom Gerät hochladen</span>
+                </div>
+                <label class="form-field form-field-full">
+                  <span>Bild auswählen</span>
+                  <input type="file" id="editor-fBildFile" accept="image/*">
+                </label>
+              </div>
+            </section>
+
+            <!-- KV Schritt 2 / Mario Schritt 1: Inhalt -->
+            <section class="editor-step-panel" data-kv-step="1" data-mario-step="0">
               <div class="editor-form-grid">
                 <label class="form-field form-field-full">
                   <span>Titel</span>
@@ -169,7 +184,8 @@
               </div>
             </section>
 
-            <section class="editor-step-panel" data-editor-step="1" hidden>
+            <!-- KV Schritt 3 / Mario Schritt 2: Termin -->
+            <section class="editor-step-panel" data-kv-step="2" data-mario-step="1">
               <div class="editor-form-grid">
                 <label class="form-field">
                   <span>Datum</span>
@@ -207,19 +223,29 @@
                   <input type="time" id="editor-fBeginn">
                 </label>
 
-                <label class="form-field" data-editor-only="kv">
+                <label class="form-field form-field-full" data-editor-only="kv">
                   <span>Preis</span>
+                  <div class="quick-chip-row">
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="30,00 € p.P. inkl. Buffet und Getränke">30 € inkl. Buffet</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="45,00 € p.P. inkl. Buffet und Getränke">45 € inkl. Buffet</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="Kaffee & Kuchen inklusive">Kaffee &amp; Kuchen</button>
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="Eintritt frei">Eintritt frei</button>
+                  </div>
                   <input type="text" id="editor-fPreis" maxlength="120">
                 </label>
 
-                <label class="form-field" data-editor-only="kv">
+                <label class="form-field form-field-full" data-editor-only="kv">
                   <span>Telefon</span>
+                  <div class="quick-chip-row">
+                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fTelefon" data-value="030 92 40 73 91">030 92 40 73 91</button>
+                  </div>
                   <input type="text" id="editor-fTelefon" maxlength="80">
                 </label>
               </div>
             </section>
 
-            <section class="editor-step-panel" data-editor-step="2" hidden>
+            <!-- KV Schritt 4 / Mario Schritt 3: Ausgabe & Einstellungen -->
+            <section class="editor-step-panel" data-kv-step="3" data-mario-step="2">
               <div class="editor-form-grid">
                 <label class="form-field form-field-full" data-editor-only="mario">
                   <span>Button-Vorlage</span>
@@ -254,23 +280,7 @@
                 <label class="form-field form-field-full">
                   <span>Bild-URL</span>
                   <input type="url" id="editor-fBild" placeholder="https://...">
-                </label>
-
-                <label class="form-field form-field-full" data-editor-only="kv">
-                  <span>Preis</span>
-                  <div class="quick-chip-row">
-                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="30,00 € p.P. inkl. Buffet und Getränke">30 € inkl. Buffet</button>
-                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="45,00 € p.P. inkl. Buffet und Getränke">45 € inkl. Buffet</button>
-                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="Kaffee & Kuchen inklusive">Kaffee & Kuchen</button>
-                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fPreis" data-value="Eintritt frei">Eintritt frei</button>
-                  </div>
-                </label>
-
-                <label class="form-field form-field-full" data-editor-only="kv">
-                  <span>Telefon</span>
-                  <div class="quick-chip-row">
-                    <button class="quick-chip" type="button" data-action="quick-set-field" data-field-id="editor-fTelefon" data-value="030 92 40 73 91">030 92 40 73 91</button>
-                  </div>
+                  <small class="field-note" data-editor-only="kv">Wird automatisch gesetzt wenn du in Schritt 1 ein Bild hochlädst.</small>
                 </label>
               </div>
 

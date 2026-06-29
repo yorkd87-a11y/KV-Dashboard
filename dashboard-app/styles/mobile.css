@@ -284,7 +284,7 @@
   }
 
   #editorCancelButton {
-    margin-right: 0;
+    display: none;
   }
 
   /* Confirm Dialog auf Phone — vertikal stapeln (3-Button-Fall) */

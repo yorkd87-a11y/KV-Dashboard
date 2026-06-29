@@ -57,7 +57,8 @@ const editorElements = {
   heading: document.getElementById("editorHeading"),
   stepNav: document.getElementById("editorStepNav"),
   stepCopy: document.getElementById("editorStepCopy"),
-  stepPanels: Array.from(document.querySelectorAll("[data-editor-step]")),
+  stepPanels: Array.from(document.querySelectorAll(".editor-step-panel")),
+  imgPreview: document.getElementById("editorImgPreview"),
   close: document.getElementById("editorCloseButton"),
   cancel: document.getElementById("editorCancelButton"),
   prev: document.getElementById("editorPrevButton"),
@@ -82,6 +83,7 @@ const editorElements = {
     link: document.getElementById("editor-fLink"),
     linkPreset: document.getElementById("editor-fLinkPreset"),
     linkHint: document.getElementById("editorLinkHint"),
+    bildFile: document.getElementById("editor-fBildFile"),
     bild: document.getElementById("editor-fBild"),
     aktiv: document.getElementById("editor-fAktiv"),
     ticketFormDone: document.getElementById("editor-fTicketDone"),
@@ -386,25 +388,18 @@ function getEditorCrossPublishLabel(type, hasLinkedTarget) {
 }
 
 function getEditorSteps(type) {
+  if (type === "kv") {
+    return [
+      { label: "Bild",          copy: "Veranstaltungsbild vom Gerät hochladen." },
+      { label: "Inhalt",        copy: "Titel, Untertitel und Beschreibung." },
+      { label: "Termin",        copy: "Datum, Ort, Zeiten und Preise." },
+      { label: "Einstellungen", copy: "Sichtbarkeit, Ticketformular und Ausgabe." }
+    ];
+  }
   return [
-    {
-      label: "Inhalt",
-      copy: type === "kv"
-        ? "Titel, Untertitel und Beschreibung."
-        : "Titel und Beschreibung."
-    },
-    {
-      label: "Termin",
-      copy: type === "kv"
-        ? "Datum, Ort und Veranstaltungsdaten."
-        : "Datum und Ort."
-    },
-    {
-      label: type === "mario" ? "Link & Ausgabe" : "Ausgabe",
-      copy: type === "kv"
-        ? "Bild, Sichtbarkeit und Ausgabe."
-        : "Bild, Button und Ziel-Link."
-    }
+    { label: "Inhalt",      copy: "Titel und Beschreibung." },
+    { label: "Termin",      copy: "Datum und Ort." },
+    { label: "Link & Ausgabe", copy: "Bild, Button und Ziel-Link." }
   ];
 }
 
@@ -414,16 +409,14 @@ function clampEditorStep(index) {
 }
 
 function getEditorStepValidationMessage(type, stepIndex, draft) {
-  if (stepIndex === 0 && !draft.titel) {
-    return "Bitte zuerst einen Titel eintragen.";
-  }
-
-  if (stepIndex === 1 && !draft.datum) {
-    return "Bitte zuerst ein Datum auswählen.";
-  }
-
-  if (stepIndex === 2) {
-    return validateDraft(type, draft);
+  if (type === "kv") {
+    if (stepIndex === 1 && !draft.titel) return "Bitte zuerst einen Titel eintragen.";
+    if (stepIndex === 2 && !draft.datum) return "Bitte zuerst ein Datum auswählen.";
+    if (stepIndex === 3) return validateDraft(type, draft);
+  } else {
+    if (stepIndex === 0 && !draft.titel) return "Bitte zuerst einen Titel eintragen.";
+    if (stepIndex === 1 && !draft.datum) return "Bitte zuerst ein Datum auswählen.";
+    if (stepIndex === 2) return validateDraft(type, draft);
   }
 
   return "";
@@ -1289,8 +1282,41 @@ function readEditorDraft() {
 }
 
 function applyEditorStepVisibility() {
+  const stepKey = editorState.type === "kv" ? "kvStep" : "marioStep";
   editorElements.stepPanels.forEach((panel) => {
-    panel.hidden = Number(panel.dataset.editorStep) !== editorState.stepIndex;
+    const panelStep = panel.dataset[stepKey];
+    panel.hidden = panelStep === undefined || Number(panelStep) !== editorState.stepIndex;
+  });
+}
+
+function updateKvImagePreview(src) {
+  const el = editorElements.imgPreview;
+  if (!el) return;
+  if (src) {
+    el.innerHTML = `<img src="${escapeHtml(src)}" alt="Vorschau">`;
+  } else {
+    el.innerHTML = `<span class="editor-img-icon">&#128247;</span><span class="editor-img-hint">Bild vom Gerät hochladen</span>`;
+  }
+}
+
+async function resizeImageToDataUrl(file, maxWidth = 800, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
   });
 }
 
@@ -1411,6 +1437,7 @@ function openEditor(type, eventId = null) {
   editorElements.heading.textContent = eventId ? "Eintrag aktualisieren" : "Eintrag anlegen";
   fillEditorForm(draft);
   editorElements.fields.crossPublish.checked = !!linkedTargetId;
+  if (type === "kv") updateKvImagePreview(draft.bild || "");
   render();
 }
 
@@ -1994,6 +2021,19 @@ function bindEvents() {
   });
   editorElements.next?.addEventListener("click", () => {
     setEditorStep(editorState.stepIndex + 1);
+  });
+
+  editorElements.fields.bildFile?.addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    updateKvImagePreview(URL.createObjectURL(file));
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      editorElements.fields.bild.value = dataUrl;
+      renderEditorPreview();
+    } catch {
+      showToast("Bild konnte nicht verarbeitet werden", "Bitte eine Bild-URL manuell eingeben.", "error");
+    }
   });
   confirmElements.cancel?.addEventListener("click", () => closeDeleteConfirm());
   confirmElements.deleteSingle?.addEventListener("click", () => {
