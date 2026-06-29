@@ -166,21 +166,27 @@
 
             <!-- KV Schritt 2 / Mario Schritt 1: Inhalt -->
             <section class="editor-step-panel" data-kv-step="1" data-mario-step="0">
-              <div class="editor-form-grid">
-                <label class="form-field form-field-full">
-                  <span>Titel</span>
-                  <input type="text" id="editor-fTitel" maxlength="140" required>
-                </label>
+              <div class="editor-blocks">
+                <div class="editor-field-block">
+                  <label class="form-field">
+                    <span>Titel</span>
+                    <input type="text" id="editor-fTitel" maxlength="140" required>
+                  </label>
+                </div>
 
-                <label class="form-field form-field-full" data-editor-only="kv">
-                  <span>Untertitel</span>
-                  <input type="text" id="editor-fUntertitel" maxlength="160">
-                </label>
+                <div class="editor-field-block" data-editor-only="kv">
+                  <label class="form-field">
+                    <span>Untertitel</span>
+                    <input type="text" id="editor-fUntertitel" maxlength="160">
+                  </label>
+                </div>
 
-                <label class="form-field form-field-full">
-                  <span>Beschreibung</span>
-                  <textarea id="editor-fBeschreibung" rows="5"></textarea>
-                </label>
+                <div class="editor-field-block">
+                  <label class="form-field">
+                    <span>Beschreibung</span>
+                    <textarea id="editor-fBeschreibung" rows="5"></textarea>
+                  </label>
+                </div>
               </div>
             </section>
 
@@ -257,42 +263,54 @@
 
             <!-- KV Schritt 4 / Mario Schritt 3: Ausgabe & Einstellungen -->
             <section class="editor-step-panel" data-kv-step="3" data-mario-step="2">
-              <div class="editor-form-grid">
-                <label class="form-field form-field-full" data-editor-only="mario">
-                  <span>Button-Vorlage</span>
-                  <input type="hidden" id="editor-fLinkPreset" value="more">
-                  <div class="shortcut-grid">
-                    <button type="button" class="shortcut-card" id="editor-preset-ticket" data-action="select-mario-preset" data-preset="ticket">
-                      <strong>Ticket reservieren</strong>
-                      <span>Reservierungslink wird automatisch gesetzt.</span>
-                    </button>
-                    <button type="button" class="shortcut-card" id="editor-preset-more" data-action="select-mario-preset" data-preset="more">
-                      <strong>Mehr erfahren</strong>
-                      <span>Feste Bezeichnung, freier Ziel-Link.</span>
-                    </button>
-                    <button type="button" class="shortcut-card" id="editor-preset-custom" data-action="select-mario-preset" data-preset="custom">
-                      <strong>Individuell</strong>
-                      <span>Button-Text und Link frei festlegen.</span>
-                    </button>
+              <div class="editor-blocks">
+                <!-- Button-Vorlage (nur Mario) -->
+                <div class="editor-field-block" data-editor-only="mario">
+                  <div class="form-field">
+                    <span>Button-Vorlage</span>
+                    <input type="hidden" id="editor-fLinkPreset" value="more">
+                    <div class="shortcut-grid">
+                      <button type="button" class="shortcut-card" id="editor-preset-ticket" data-action="select-mario-preset" data-preset="ticket">
+                        <strong>Ticket reservieren</strong>
+                        <span>Reservierungslink wird automatisch gesetzt.</span>
+                      </button>
+                      <button type="button" class="shortcut-card" id="editor-preset-more" data-action="select-mario-preset" data-preset="more">
+                        <strong>Mehr erfahren</strong>
+                        <span>Feste Bezeichnung, freier Ziel-Link.</span>
+                      </button>
+                      <button type="button" class="shortcut-card" id="editor-preset-custom" data-action="select-mario-preset" data-preset="custom">
+                        <strong>Individuell</strong>
+                        <span>Button-Text und Link frei festlegen.</span>
+                      </button>
+                    </div>
                   </div>
-                </label>
+                </div>
 
-                <label class="form-field" data-editor-only="mario">
-                  <span>Button-Label</span>
-                  <input type="text" id="editor-fButtonLabel" maxlength="80">
-                </label>
+                <!-- Button-Label (nur Mario) -->
+                <div class="editor-field-block" data-editor-only="mario">
+                  <label class="form-field">
+                    <span>Button-Label</span>
+                    <input type="text" id="editor-fButtonLabel" maxlength="80">
+                  </label>
+                </div>
 
-                <label class="form-field form-field-full" data-editor-only="mario">
-                  <span>Link</span>
-                  <input type="url" id="editor-fLink" placeholder="https://...">
-                  <small class="field-note" id="editorLinkHint">Kein Link = kein Button auf der Website.</small>
-                </label>
+                <!-- Link (nur Mario) -->
+                <div class="editor-field-block" data-editor-only="mario">
+                  <label class="form-field">
+                    <span>Link</span>
+                    <input type="url" id="editor-fLink" placeholder="https://...">
+                    <small class="field-note" id="editorLinkHint">Kein Link = kein Button auf der Website.</small>
+                  </label>
+                </div>
 
-                <label class="form-field form-field-full">
-                  <span>Bild-URL</span>
-                  <input type="url" id="editor-fBild" placeholder="https://...">
-                  <small class="field-note" data-editor-only="kv">Wird automatisch gesetzt wenn du in Schritt 1 ein Bild hochlädst.</small>
-                </label>
+                <!-- Bild-URL (beide) -->
+                <div class="editor-field-block">
+                  <label class="form-field">
+                    <span>Bild-URL</span>
+                    <input type="url" id="editor-fBild" placeholder="https://...">
+                    <small class="field-note" data-editor-only="kv">Wird automatisch gesetzt wenn du in Schritt 1 ein Bild hochlädst.</small>
+                  </label>
+                </div>
               </div>
 
               <div class="toggle-grid">
