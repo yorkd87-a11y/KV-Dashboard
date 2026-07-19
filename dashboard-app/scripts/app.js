@@ -1910,6 +1910,7 @@ async function saveCurrentEditor() {
       await clearCrossPlatformLinkPair(sourceType, eventId, targetType, previousLinkedTargetId);
     }
 
+    setStatusFilter(sourceType, null);
     setSelectedId(sourceType, eventId);
     setActiveTab(sourceType);
     clearEditorFieldErrors();
