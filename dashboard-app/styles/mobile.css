@@ -11,7 +11,11 @@
     grid-template-columns: 1fr;
   }
 
-  /* Mario-Layout: Inspector bleibt oben, Preview-Poster stapelt sich */
+  /* Mario-Layout mobile: Liste zuerst, Inspector-Vorschau darunter (wie bei KV) */
+  .workspace--mario .workspace-side {
+    order: 0;
+  }
+
   .workspace--mario .preview-poster-mario {
     display: flex;
     flex-direction: column;
