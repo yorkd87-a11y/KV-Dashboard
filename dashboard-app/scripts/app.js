@@ -21,6 +21,7 @@ const APP_VERSION = new URL(import.meta.url).searchParams.get("v") || "unknown";
 const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const TOAST_AUTO_CLOSE_MS = 5000;
 const PUSH_TOKEN_STORAGE_KEY = "dashboard-push-token";
+const HOMESCREEN_GUIDE_STORAGE_KEY = "dashboard-homescreen-guide-shown";
 const PUSH_FUNCTION_REGION = "europe-west3";
 const pushConfig = globalThis.DASHBOARD_PUSH_CONFIG || {};
 
@@ -71,6 +72,10 @@ const pushElements = {
   panel: document.getElementById("pushReminderPanel"),
   status: document.getElementById("pushReminderStatus"),
   action: document.getElementById("pushReminderButton")
+};
+const homescreenGuideElements = {
+  modal: document.getElementById("homescreenGuide"),
+  close: document.getElementById("homescreenGuideClose")
 };
 const confirmElements = {
   modal: document.getElementById("confirmModal"),
@@ -2375,6 +2380,7 @@ function bindEvents() {
   createKvButton?.addEventListener("click", () => openEditor("kv"));
   createMarioButton?.addEventListener("click", () => openEditor("mario"));
   pushElements.action?.addEventListener("click", () => void enablePushReminders());
+  homescreenGuideElements.close?.addEventListener("click", closeHomescreenGuide);
 
   editorElements.close?.addEventListener("click", closeEditor);
   editorElements.cancel?.addEventListener("click", closeEditor);
@@ -2517,6 +2523,42 @@ function initUpdateCheck() {
   window.addEventListener("pageshow", () => checkForUpdate());
 
   setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS);
+}
+
+function isHomescreenApp() {
+  const standaloneDisplayMode = ["standalone", "fullscreen", "minimal-ui"]
+    .some((mode) => window.matchMedia?.(`(display-mode: ${mode})`).matches);
+  return standaloneDisplayMode
+    || window.navigator.standalone === true
+    || document.referrer.startsWith("android-app://");
+}
+
+function getHomescreenGuidePlatform() {
+  const isAppleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isAppleMobile) return "ios";
+  if (/Android/i.test(navigator.userAgent)) return "android";
+  return "";
+}
+
+function closeHomescreenGuide() {
+  if (homescreenGuideElements.modal) homescreenGuideElements.modal.hidden = true;
+}
+
+function initHomescreenGuide() {
+  const platform = getHomescreenGuidePlatform();
+  if (!homescreenGuideElements.modal || !platform || isHomescreenApp()) return;
+
+  try {
+    if (localStorage.getItem(HOMESCREEN_GUIDE_STORAGE_KEY)) return;
+    localStorage.setItem(HOMESCREEN_GUIDE_STORAGE_KEY, "true");
+  } catch {
+    // If browser storage is unavailable, showing the guide is still safe.
+  }
+
+  homescreenGuideElements.modal.dataset.platform = platform;
+  homescreenGuideElements.modal.hidden = false;
+  requestAnimationFrame(() => homescreenGuideElements.close?.focus());
 }
 
 function renderConnectivityStatus() {
@@ -2670,6 +2712,7 @@ async function initPushReminders() {
 function init() {
   bindEvents();
   initConnectivityStatus();
+  initHomescreenGuide();
   void initPushReminders();
   initData();
   render();

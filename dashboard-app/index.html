@@ -8,9 +8,9 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="./assets/icons/dashboard-icon.png">
   <link rel="apple-touch-icon" href="./assets/icons/dashboard-icon.png">
-  <link rel="stylesheet" href="./styles/base.css?v=20260719-23">
-  <link rel="stylesheet" href="./styles/app.css?v=20260719-23">
-  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-23">
+  <link rel="stylesheet" href="./styles/base.css?v=20260719-24">
+  <link rel="stylesheet" href="./styles/app.css?v=20260719-24">
+  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-24">
 </head>
 <body>
   <div class="app-shell">
@@ -412,9 +412,38 @@
     </section>
   </div>
 
+  <div class="homescreen-guide-modal" id="homescreenGuide" hidden>
+    <div class="editor-backdrop"></div>
+    <section class="homescreen-guide-panel" role="dialog" aria-modal="true" aria-labelledby="homescreenGuideHeading">
+      <p class="eyebrow">Praktischer Tipp</p>
+      <h2 id="homescreenGuideHeading">Dashboard zum Homescreen hinzufügen</h2>
+      <p class="support-copy">So öffnest du das Dashboard künftig wie eine eigene App und kannst Erinnerungen aktivieren.</p>
+
+      <div class="homescreen-guide-platform" data-homescreen-platform="ios">
+        <p class="homescreen-guide-label">Auf iPhone oder iPad</p>
+        <ol class="homescreen-guide-list">
+          <li>Öffne diese Seite in <strong>Safari</strong>.</li>
+          <li>Tippe auf <strong>Teilen</strong>.</li>
+          <li>Wähle <strong>„Zum Home-Bildschirm“</strong> und danach <strong>„Hinzufügen“</strong>.</li>
+        </ol>
+      </div>
+
+      <div class="homescreen-guide-platform" data-homescreen-platform="android">
+        <p class="homescreen-guide-label">Auf Android</p>
+        <ol class="homescreen-guide-list">
+          <li>Tippe im Browser oben rechts auf das Menü mit den drei Punkten.</li>
+          <li>Wähle <strong>„App installieren“</strong> oder <strong>„Zum Startbildschirm hinzufügen“</strong>.</li>
+          <li>Bestätige anschließend mit <strong>„Installieren“</strong> oder <strong>„Hinzufügen“</strong>.</li>
+        </ol>
+      </div>
+
+      <button class="primary-button homescreen-guide-close" type="button" id="homescreenGuideClose">Verstanden</button>
+    </section>
+  </div>
+
   <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="./push-config.js?v=20260719-23"></script>
-  <script type="module" src="./scripts/app.js?v=20260719-23"></script>
+  <script src="./push-config.js?v=20260719-24"></script>
+  <script type="module" src="./scripts/app.js?v=20260719-24"></script>
 </body>
 </html>

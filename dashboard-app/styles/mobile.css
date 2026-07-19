@@ -519,6 +519,17 @@
     bottom: calc(12px + env(safe-area-inset-bottom));
     width: auto;
   }
+
+  .homescreen-guide-modal {
+    align-items: flex-end;
+    padding: 12px 12px calc(12px + env(safe-area-inset-bottom));
+  }
+
+  .homescreen-guide-panel {
+    width: 100%;
+    padding: 26px 20px 20px;
+    border-radius: 24px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

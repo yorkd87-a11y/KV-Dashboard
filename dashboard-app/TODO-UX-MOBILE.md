@@ -187,10 +187,15 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
 ### [x] Geplanter Firebase-Erinnerungsdienst
 - Prüft beide Event-Bereiche täglich und sendet nur bei offenem Handlungsbedarf.
 
-### [ ] Firebase-Konto einrichten und Hintergrunddienst bereitstellen
+### [x] Firebase-Konto einrichten und Hintergrunddienst bereitstellen
 - VAPID-Schlüssel, Mario-Service-Konto als Secret und Deployment sind in `PUSH-ERINNERUNGEN.md` beschrieben.
 
 ---
+
+## Ergänzungen
+
+### [x] Homescreen-Anleitung bei Browser-Aufruf
+- Mobile Browser erkennen und beim ersten Aufruf eine iPhone-/Android-Anleitung anzeigen. Bereits installierte Homescreen-Apps überspringen den Hinweis automatisch.
 
 ## Reihenfolge-Empfehlung
 1. **Paket A (größter Effekt):** Punkt 1, 2, 3
