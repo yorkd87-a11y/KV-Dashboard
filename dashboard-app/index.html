@@ -8,9 +8,9 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="./assets/icons/dashboard-icon.png">
   <link rel="apple-touch-icon" href="./assets/icons/dashboard-icon.png">
-  <link rel="stylesheet" href="./styles/base.css?v=20260719-15">
-  <link rel="stylesheet" href="./styles/app.css?v=20260719-15">
-  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-15">
+  <link rel="stylesheet" href="./styles/base.css?v=20260719-19">
+  <link rel="stylesheet" href="./styles/app.css?v=20260719-19">
+  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-19">
 </head>
 <body>
   <div class="app-shell">
@@ -33,9 +33,17 @@
         <a class="utility-link" href="https://eu.jotform.com/build/251081662723050" target="_blank" rel="noopener noreferrer">
           Jotform
         </a>
-        <button class="header-alert-button" type="button" id="headerAlertButton" aria-label="Es gibt offene Prüfungen" hidden>!</button>
+        <button class="header-alert-button" type="button" id="headerAlertButton" aria-label="Es gibt offene Prüfungen" hidden>
+          <span class="alert-count">0</span>
+          <span class="visually-hidden">offene Prüfungen</span>
+        </button>
       </div>
     </header>
+
+    <div class="offline-banner" id="offlineBanner" role="status" hidden>
+      <span class="offline-banner-dot" aria-hidden="true"></span>
+      <span>Keine Internetverbindung. Änderungen werden wieder synchronisiert, sobald du online bist.</span>
+    </div>
 
     <main class="workspace">
       <section class="workspace-main">
@@ -89,6 +97,13 @@
               </div>
               <div class="status-chip-row" id="kv-status-chips"></div>
               <div class="event-stack event-stack-wide" id="kv-list"></div>
+              <details class="archive-section" id="kv-archive" hidden>
+                <summary>
+                  <span>Archiv</span>
+                  <span class="archive-count" id="kv-archive-count">0</span>
+                </summary>
+                <div class="event-stack archive-list" id="kv-archive-list"></div>
+              </details>
             </article>
           </section>
         </div>
@@ -105,6 +120,13 @@
               </div>
               <div class="status-chip-row" id="mario-status-chips"></div>
               <div class="event-stack event-stack-wide" id="mario-list"></div>
+              <details class="archive-section" id="mario-archive" hidden>
+                <summary>
+                  <span>Archiv</span>
+                  <span class="archive-count" id="mario-archive-count">0</span>
+                </summary>
+                <div class="event-stack archive-list" id="mario-archive-list"></div>
+              </details>
             </article>
           </section>
         </div>
@@ -138,6 +160,11 @@
         <span>Mario</span>
       </button>
     </nav>
+
+    <button class="fab-button" id="createFabButton" type="button" data-action="create-event" aria-label="Neuen Eintrag anlegen" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span class="visually-hidden">Neuen Eintrag anlegen</span>
+    </button>
   </div>
 
   <div class="editor-modal" id="editorModal" hidden>
@@ -379,6 +406,6 @@
 
   <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
 
-  <script type="module" src="./scripts/app.js?v=20260719-15"></script>
+  <script type="module" src="./scripts/app.js?v=20260719-19"></script>
 </body>
 </html>

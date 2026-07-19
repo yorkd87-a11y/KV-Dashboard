@@ -25,6 +25,7 @@ const panels = {
   mario: document.getElementById("panel-mario")
 };
 const headerAlertButton = document.getElementById("headerAlertButton");
+const offlineBanner = document.getElementById("offlineBanner");
 const workspace = document.querySelector(".workspace");
 const workspaceSide = document.querySelector(".workspace-side");
 const listTargets = {
@@ -35,6 +36,18 @@ const listTargets = {
   kv: document.getElementById("kv-list"),
   mario: document.getElementById("mario-list")
 };
+const archiveTargets = {
+  kv: {
+    section: document.getElementById("kv-archive"),
+    count: document.getElementById("kv-archive-count"),
+    list: document.getElementById("kv-archive-list")
+  },
+  mario: {
+    section: document.getElementById("mario-archive"),
+    count: document.getElementById("mario-archive-count"),
+    list: document.getElementById("mario-archive-list")
+  }
+};
 const countTargets = {
   homeKv: document.getElementById("home-kv-count"),
   homeMario: document.getElementById("home-mario-count")
@@ -44,6 +57,7 @@ const statusChipContainers = {
   mario: document.getElementById("mario-status-chips")
 };
 const inspectorStage = document.getElementById("inspector-stage");
+const createFabButton = document.getElementById("createFabButton");
 const createKvButton = document.getElementById("create-kv-button");
 const createMarioButton = document.getElementById("create-mario-button");
 const toastHost = document.getElementById("toastHost");
@@ -225,6 +239,22 @@ function formatDate(dateString) {
   });
 }
 
+function getRelativeDateLabel(dateString) {
+  if (!dateString) return "";
+  const eventDate = new Date(dateString + "T12:00:00");
+  if (Number.isNaN(eventDate.getTime())) return "";
+
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const eventDay = new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate());
+  const daysUntilEvent = Math.round((eventDay - today) / (24 * 60 * 60 * 1000));
+
+  if (daysUntilEvent === 0) return "Heute";
+  if (daysUntilEvent === 1) return "Morgen";
+  if (daysUntilEvent > 1 && daysUntilEvent <= 14) return `in ${daysUntilEvent} Tagen`;
+  return "";
+}
+
 function getTodayDateString() {
   const now = new Date();
   const year = now.getFullYear();
@@ -290,6 +320,10 @@ function canResolveExpiredKvEvent(eventItem) {
 
 function getVisibleEvents(type) {
   return appState.events[type].filter((eventItem) => !isEventArchived(eventItem));
+}
+
+function getArchivedEvents(type) {
+  return appState.events[type].filter((eventItem) => isEventArchived(eventItem));
 }
 
 function getFilteredVisibleEvents(type) {
@@ -418,19 +452,37 @@ function getExpiredMarioEventsNeedingReview() {
   return getVisibleEvents("mario").filter((eventItem) => needsExpiredMarioReview(eventItem));
 }
 
+function getAllEventsNeedingReview() {
+  const reviewGroups = [
+    { type: "kv", events: getExpiredKvEventsNeedingCleanup() },
+    { type: "kv", events: getPendingKvEvents() },
+    { type: "mario", events: getExpiredMarioEventsNeedingReview() }
+  ];
+  const seen = new Set();
+
+  return reviewGroups.flatMap(({ type, events }) => events.map((eventItem) => ({ type, eventItem })))
+    .filter(({ type, eventItem }) => {
+      const key = `${type}:${eventItem.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 function getFirstEventNeedingReview() {
-  const kvEventItem = getExpiredKvEventsNeedingCleanup()[0] || getPendingKvEvents()[0] || null;
-  if (kvEventItem) return { type: "kv", eventItem: kvEventItem };
-
-  const marioEventItem = getExpiredMarioEventsNeedingReview()[0] || null;
-  if (marioEventItem) return { type: "mario", eventItem: marioEventItem };
-
-  return null;
+  return getAllEventsNeedingReview()[0] || null;
 }
 
 function renderHeaderAlert() {
   if (!headerAlertButton) return;
-  headerAlertButton.hidden = !getFirstEventNeedingReview();
+  const reviewEvents = getAllEventsNeedingReview();
+  const reviewCount = reviewEvents.length;
+  headerAlertButton.hidden = reviewCount === 0;
+  headerAlertButton.querySelector(".alert-count").textContent = reviewCount;
+  headerAlertButton.setAttribute(
+    "aria-label",
+    `${reviewCount} offene ${reviewCount === 1 ? "Prüfung" : "Prüfungen"}: zum nächsten offenen Punkt springen`
+  );
 }
 
 function getCrossPlatformButtonLabel(type, eventItem) {
@@ -935,9 +987,11 @@ function buildPreviewPoster(type, eventItem, options = {}) {
   `;
 }
 
-function buildEventRow(type, eventItem, selected = false) {
+function buildEventRow(type, eventItem, selected = false, isArchivedView = false) {
   const status = getStatus(eventItem);
   const title = escapeHtml(eventItem.titel || "(Ohne Titel)");
+  const relativeDateLabel = getRelativeDateLabel(eventItem.datum);
+  const dateLabel = [relativeDateLabel, formatDate(eventItem.datum)].filter(Boolean).join(" · ");
   const linkedTarget = getCrossPlatformTarget(type, eventItem);
   const image = eventItem.bild
     ? `<img src="${escapeHtml(eventItem.bild)}" alt="${title}">`
@@ -956,10 +1010,8 @@ function buildEventRow(type, eventItem, selected = false) {
     <article class="event-row${selected ? " is-selected" : ""}">
       <div class="event-row-top">
         <div
-          class="event-row-main"
-          data-action="select-event"
-          data-event-type="${type}"
-          data-event-id="${eventItem.id}"
+          class="event-row-main${isArchivedView ? " is-static" : ""}"
+          ${isArchivedView ? "" : `data-action="select-event" data-event-type="${type}" data-event-id="${eventItem.id}"`}
         >
           <div class="event-thumb">${image}</div>
           <div class="event-copy">
@@ -967,7 +1019,7 @@ function buildEventRow(type, eventItem, selected = false) {
               <strong>${title}</strong>
               <button class="row-gear-button" type="button" data-action="toggle-row-actions" aria-label="Aktionen anzeigen">&#9881;</button>
             </div>
-            <span>${escapeHtml(formatDate(eventItem.datum))}</span>
+            <span>${escapeHtml(dateLabel)}</span>
             ${location}
             <div class="event-row-meta">
               <span class="event-row-badge ${status.className}">${escapeHtml(status.label)}</span>
@@ -979,6 +1031,16 @@ function buildEventRow(type, eventItem, selected = false) {
         </div>
       </div>
       <div class="row-actions-panel">
+        ${isArchivedView ? `
+        <button
+          class="row-edit-button"
+          type="button"
+          data-action="unarchive-event"
+          data-event-type="${type}"
+          data-event-id="${eventItem.id}"
+        >
+          Wiederherstellen
+        </button>` : `
         ${type === "kv" ? `
         <button
           class="row-action-button${eventItem.ticketFormDone ? "" : " is-warning"}"
@@ -1015,7 +1077,7 @@ function buildEventRow(type, eventItem, selected = false) {
           data-event-id="${eventItem.id}"
         >
           Löschen
-        </button>
+        </button>`}
       </div>
     </article>
   `;
@@ -1090,6 +1152,18 @@ function renderTypeList(type) {
     .join("");
 }
 
+function renderArchiveList(type) {
+  const target = archiveTargets[type];
+  if (!target?.section || !target.count || !target.list) return;
+
+  const events = getArchivedEvents(type);
+  target.section.hidden = !appState.loaded[type] || events.length === 0;
+  target.count.textContent = events.length;
+  target.list.innerHTML = events
+    .map((eventItem) => buildEventRow(type, eventItem, false, true))
+    .join("");
+}
+
 function renderCounts() {
   const kvEvents = getVisibleEvents("kv");
   const marioEvents = getVisibleEvents("mario");
@@ -1116,10 +1190,10 @@ function renderStatusChips(type, events) {
   });
 
   const chipDefs = [
-    { tone: "live", count: counts.live, label: "aktiv" },
-    { tone: "soon", count: counts.soon, label: "bald" },
-    { tone: "expired", count: counts.expired, label: "abgelaufen" },
-    { tone: "off", count: counts.off, label: "pausiert" }
+    { tone: "live", count: counts.live, label: "aktiv", compactLabel: "aktiv" },
+    { tone: "soon", count: counts.soon, label: "bald", compactLabel: "bald" },
+    { tone: "expired", count: counts.expired, label: "abgelaufen", compactLabel: "abgel." },
+    { tone: "off", count: counts.off, label: "pausiert", compactLabel: "paus." }
   ];
 
   container.innerHTML = chipDefs.map((chip) => {
@@ -1138,7 +1212,11 @@ function renderStatusChips(type, events) {
       aria-label="${actionLabel}"
     >
       <span class="status-chip-dot"></span>
-      <strong>${chip.count}</strong> ${chip.label}
+      <strong>${chip.count}</strong>
+      <span class="status-chip-label">
+        <span class="status-chip-label-full">${chip.label}</span>
+        <span class="status-chip-label-compact">${chip.compactLabel}</span>
+      </span>
     </button>
   `;
   }).join("");
@@ -1375,11 +1453,27 @@ function render() {
 
   workspace?.classList.toggle("workspace--mario", appState.activeTab === "mario");
 
+  const activeEventType = ["kv", "mario"].includes(appState.activeTab) ? appState.activeTab : null;
+  if (createFabButton) {
+    createFabButton.hidden = !activeEventType;
+    if (activeEventType) {
+      createFabButton.dataset.eventType = activeEventType;
+      createFabButton.setAttribute(
+        "aria-label",
+        activeEventType === "kv" ? "Neues Vereins-Event anlegen" : "Neuen Mario-Termin anlegen"
+      );
+    } else {
+      createFabButton.removeAttribute("data-event-type");
+    }
+  }
+
   renderCounts();
   renderHomeList("kv");
   renderHomeList("mario");
   renderTypeList("kv");
   renderTypeList("mario");
+  renderArchiveList("kv");
+  renderArchiveList("mario");
   renderHeaderAlert();
   updateInspectorVisibility();
   renderInspector();
@@ -2004,6 +2098,21 @@ async function archiveEvent(type, eventId) {
   }
 }
 
+async function unarchiveEvent(type, eventId) {
+  const eventItem = getEventById(type, eventId);
+  if (!eventItem) return;
+
+  try {
+    await patchEventDocument(type, eventId, { archived: false });
+    showToast(
+      "Eintrag wiederhergestellt",
+      `${eventItem.titel || "Der Eintrag"} ist wieder in der Liste und bleibt zunächst pausiert.`
+    );
+  } catch (error) {
+    showToast("Wiederherstellen fehlgeschlagen", error?.message || "Bitte Verbindung und Firestore-Regeln prüfen.", "error");
+  }
+}
+
 async function confirmDeleteEvent(mode = "single") {
   const type = confirmState.type;
   const eventId = confirmState.eventId;
@@ -2066,11 +2175,18 @@ function handleActionClick(actionTrigger) {
     const eventId = actionTrigger.getAttribute("data-event-id");
     if (!type || !eventId) return;
 
+    const shouldScrollToInspector = appState.activeTab !== "home"
+      && window.matchMedia("(max-width: 1100px)").matches;
+
     setSelectedId(type, eventId);
     if (appState.activeTab === "home") {
       setActiveTab(type);
     }
     render();
+    if (shouldScrollToInspector && inspectorStage) {
+      const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+      requestAnimationFrame(() => inspectorStage.scrollIntoView({ behavior, block: "start" }));
+    }
     return;
   }
 
@@ -2157,6 +2273,14 @@ function handleActionClick(actionTrigger) {
     const eventId = actionTrigger.getAttribute("data-event-id");
     if (!type || !eventId) return;
     void archiveEvent(type, eventId);
+    return;
+  }
+
+  if (action === "unarchive-event") {
+    const type = actionTrigger.getAttribute("data-event-type");
+    const eventId = actionTrigger.getAttribute("data-event-id");
+    if (!type || !eventId) return;
+    void unarchiveEvent(type, eventId);
     return;
   }
 
@@ -2375,8 +2499,20 @@ function initUpdateCheck() {
   setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS);
 }
 
+function renderConnectivityStatus() {
+  if (!offlineBanner) return;
+  offlineBanner.hidden = navigator.onLine;
+}
+
+function initConnectivityStatus() {
+  renderConnectivityStatus();
+  window.addEventListener("online", renderConnectivityStatus);
+  window.addEventListener("offline", renderConnectivityStatus);
+}
+
 function init() {
   bindEvents();
+  initConnectivityStatus();
   initData();
   render();
   initUpdateCheck();

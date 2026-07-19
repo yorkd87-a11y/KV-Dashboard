@@ -87,22 +87,22 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
 
 ## Priorität 2 – Bedienfluss & Navigation
 
-### [ ] 6. Nach Karten-Tap sanft zur Vorschau scrollen (Mobile)
+### [x] 6. Nach Karten-Tap sanft zur Vorschau scrollen (Mobile)
 - **Wo:** `handleActionClick()`, Case `"select-event"` (Zeile 1961-1973) in `app.js`.
 - **Wie:** Analog zum bestehenden `headerAlertButton`-Handler (Zeile 2117-2125, nutzt `inspectorStage?.scrollIntoView({ behavior: "smooth", block: "start" })`) denselben Scroll-Call hinzufügen – aber **nur wenn `appState.activeTab !== "home"`** und nur auf schmalen Viewports (z. B. via `window.matchMedia("(max-width: 1100px)").matches`, passend zum Breakpoint in `mobile.css` Zeile 5).
 
-### [ ] 7. Schwebender „+“-Button (FAB)
+### [x] 7. Schwebender „+“-Button (FAB)
 - **Wo:** Neues Element in `index.html`, z. B. direkt vor `</main>` oder in `.app-shell`; CSS in `app.css`/`mobile.css`; Klick ruft bestehende `openEditor(type)` (Zeile 1519) über den vorhandenen `data-action="create-event"`-Mechanismus auf (kein neuer JS-Code nötig, nur `data-event-type` dynamisch auf `appState.activeTab` setzen beim Rendern, ähnlich `renderHeaderAlert()`).
 - **Wie:** Fixed-position Button unten rechts, nur sichtbar wenn `activeTab` `kv` oder `mario` ist (in `render()`, Zeile 1287ff., hidden-Flag setzen). Safe-Area/Bottom-Tab-Bar (Punkt 1) beim `bottom`-Offset berücksichtigen.
 
-### [ ] 8. Zähler im roten „!“-Button + Sprung zum nächsten offenen Punkt
+### [x] 8. Zähler im roten „!“-Button + Sprung zum nächsten offenen Punkt
 - **Wo:** `getFirstEventNeedingReview()` (Zeile 394-402), `renderHeaderAlert()` (Zeile 404-407), `headerAlertButton` HTML (Zeile 36 in `index.html`).
 - **Wie:**
   1. Neue Funktion `getAllEventsNeedingReview()` (kombiniert `getExpiredKvEventsNeedingCleanup()` + `getPendingKvEvents()` + `getExpiredMarioEventsNeedingReview()`, dedupliziert).
   2. In `renderHeaderAlert()` die Anzahl in ein `<span>` im Button schreiben (Button-Inhalt von statischem `!` auf `<span class="alert-count">3</span>` erweitern, CSS in `app.css` bei `.header-alert-button` Zeile 161-179 ergänzen).
   3. Nach einer Aktion (`archive-event`/`confirm-ticket-removed`/etc.) prüft `render()` ohnehin neu – kein Extra-Code nötig, nur sicherstellen dass der Button-Klick-Handler nach Erledigung erneut zum nächsten Punkt springen kann (bereits der Fall, da `getFirstEventNeedingReview()` bei jedem Klick neu berechnet wird).
 
-### [ ] 9. Archiv sichtbar machen + Wiederherstellen
+### [x] 9. Archiv sichtbar machen + Wiederherstellen
 - **Warum:** `archiveEvent()` (Zeile 1875-1901) setzt `archived: true`, aber `getVisibleEvents()` (state-Filter in `app.js` Zeile 287-289) blendet archivierte Events komplett aus – es gibt aktuell **keine UI**, um sie wiederzusehen.
 - **Wo:**
   - `scripts/app.js`: `getVisibleEvents()` (Zeile 287-289), `renderTypeList()` (Zeile 1015-1028).
@@ -151,11 +151,11 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
 - **Wo:** `showToast()` (Zeile 327-341 in `app.js`), `closeToast()` (Zeile 343-345).
 - **Wie:** In `showToast()` bei `kind !== "error"` einen `setTimeout(() => closeToast(), 5000)` setzen; bei erneutem `showToast()`-Aufruf vorherigen Timer clearen (Timer-Referenz z. B. in einer Modul-Variable `toastTimer` speichern). Update-Toast (`showUpdateToast()`, Zeile 347-361) explizit ausnehmen (soll stehen bleiben).
 
-### [ ] 14. Relative Datumsangabe auf Karten
+### [x] 14. Relative Datumsangabe auf Karten
 - **Wo:** `buildEventRow()` (Zeile 909-993), nutzt aktuell `formatDate()` (Zeile 212-222 in `app.js`, bzw. `state.js`-Import beachten – Funktion liegt tatsächlich direkt in `app.js`).
 - **Wie:** Neue Hilfsfunktion `getRelativeDateLabel(dateString)` (z. B. „Heute“, „Morgen“, „in 6 Tagen“, ab >14 Tage kein Relativ-Label mehr) und in der Kartenzeile zusätzlich zum vorhandenen `formatDate()`-Text anzeigen, z. B. `<span>${relativeLabel} · ${formatDate(...)}</span>`.
 
-### [ ] 15. Lange Titel auf 2 Zeilen begrenzen
+### [x] 15. Lange Titel auf 2 Zeilen begrenzen
 - **Wo:** `app.css`, `.event-copy strong` (Zeile 589-591) bzw. `.event-copy-head strong` (Zeile 485-487 sowie mobile Override Zeile 205-207 in `mobile.css`).
 - **Wie:** `display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;` ergänzen (gleiches Muster wie schon bei `.pw-mario-beschreibung` in `app.css` Zeile 1954-1962 verwendet).
 
@@ -173,7 +173,7 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
   1. `viewport`-Meta um `viewport-fit=cover` ergänzen: `content="width=device-width, initial-scale=1.0, viewport-fit=cover"`.
   2. Bei allen fixed-bottom-Elementen `padding-bottom: env(safe-area-inset-bottom)` bzw. `bottom: calc(<wert> + env(safe-area-inset-bottom))` ergänzen.
 
-### [ ] 18. Offline-Hinweis
+### [x] 18. Offline-Hinweis
 - **Wo:** Neuer Code-Abschnitt in `app.js`, ähnlich `initUpdateCheck()` (Zeile 2255-2265).
 - **Wie:** `window.addEventListener("online"/"offline", ...)` → globalen State-Flag setzen, dezenten Banner (neues Element, z. B. `<div class="offline-banner" hidden>` in `index.html` nahe `.topbar`) ein-/ausblenden. Kein Firestore-spezifischer Retry-Code nötig, Firestore SDK cached/synct selbst; der Banner ist reines UI-Feedback.
 

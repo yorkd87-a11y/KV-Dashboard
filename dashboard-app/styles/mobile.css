@@ -66,6 +66,55 @@
     backdrop-filter: blur(12px);
   }
 
+  .fab-button:not([hidden]) {
+    position: fixed;
+    z-index: 21;
+    right: 18px;
+    bottom: calc(68px + env(safe-area-inset-bottom));
+    display: inline-grid;
+    width: 52px;
+    height: 52px;
+    place-items: center;
+    padding: 0;
+    border: 1px solid rgba(16, 24, 40, 0.16);
+    border-radius: 50%;
+    background: linear-gradient(135deg, #e3c36b, var(--warm));
+    color: #101828;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(16, 24, 40, 0.22);
+    touch-action: manipulation;
+  }
+
+  .fab-button svg {
+    width: 25px;
+    height: 25px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+  }
+
+  .fab-button:active {
+    transform: scale(0.94);
+  }
+
+  .status-chip-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    margin-bottom: 16px;
+  }
+
+  .status-chip {
+    width: 100%;
+    min-width: 0;
+    justify-content: center;
+    gap: 4px;
+    padding: 6px 5px;
+    white-space: nowrap;
+    font-size: 0.7rem;
+  }
+
   .intro-strip {
     grid-template-columns: 1fr;
     padding: 22px 20px;
@@ -124,8 +173,15 @@
 
 @media (max-width: 640px) {
   .topbar,
-  .workspace {
+  .workspace,
+  .offline-banner {
     width: min(calc(100% - 20px), var(--content-width));
+  }
+
+  .offline-banner {
+    margin-top: 10px;
+    margin-bottom: -10px;
+    font-size: 0.8rem;
   }
 
   .brand-mark {
@@ -315,8 +371,17 @@
 
   .status-chip {
     min-height: 44px;
-    padding-right: 14px;
-    padding-left: 12px;
+    padding-right: 4px;
+    padding-left: 4px;
+    font-size: 0.66rem;
+  }
+
+  .status-chip-label-full {
+    display: none;
+  }
+
+  .status-chip-label-compact {
+    display: inline;
   }
 
   /* Confirm Dialog auf Phone — vertikal stapeln (3-Button-Fall) */
