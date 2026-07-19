@@ -191,11 +191,15 @@
     min-height: 160px;
   }
 
-  /* Event-Zeilen — Thumbnail kompakter */
+  /* Event-Zeilen — Zahnrad sitzt jetzt in der Titelzeile, Thumbnail hat dadurch mehr Platz */
   .event-thumb {
-    width: 44px;
-    height: 56px;
+    width: 54px;
+    height: 70px;
     border-radius: 10px;
+  }
+
+  .event-copy-head strong {
+    font-size: 0.92rem;
   }
 
   /* Aktions-Panel auf Mobile — Buttons strecken sich gleichmaessig */

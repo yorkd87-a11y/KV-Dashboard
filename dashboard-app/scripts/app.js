@@ -926,16 +926,18 @@ function buildEventRow(type, eventItem, selected = false) {
   return `
     <article class="event-row${selected ? " is-selected" : ""}">
       <div class="event-row-top">
-        <button
+        <div
           class="event-row-main"
-          type="button"
           data-action="select-event"
           data-event-type="${type}"
           data-event-id="${eventItem.id}"
         >
           <div class="event-thumb">${image}</div>
           <div class="event-copy">
-            <strong>${title}</strong>
+            <div class="event-copy-head">
+              <strong>${title}</strong>
+              <button class="row-gear-button" type="button" data-action="toggle-row-actions" aria-label="Aktionen anzeigen">&#9881;</button>
+            </div>
             <span>${escapeHtml(formatDate(eventItem.datum))}</span>
             ${location}
             <div class="event-row-meta">
@@ -945,8 +947,7 @@ function buildEventRow(type, eventItem, selected = false) {
               ${linkedTarget.id ? `<span class="event-link-badge">${linkedTarget.type === "mario" ? "Mit Mario" : "Mit KV"}</span>` : ""}
             </div>
           </div>
-        </button>
-        <button class="row-gear-button" type="button" data-action="toggle-row-actions" aria-label="Aktionen anzeigen">&#9881;</button>
+        </div>
       </div>
       <div class="row-actions-panel">
         ${type === "kv" ? `
