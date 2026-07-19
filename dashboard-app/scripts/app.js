@@ -22,6 +22,7 @@ const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const TOAST_AUTO_CLOSE_MS = 5000;
 const PUSH_TOKEN_STORAGE_KEY = "dashboard-push-token";
 const HOMESCREEN_GUIDE_STORAGE_KEY = "dashboard-homescreen-guide-shown";
+const HOMESCREEN_GUIDE_REPEAT_MS = 7 * 24 * 60 * 60 * 1000;
 const PUSH_FUNCTION_REGION = "europe-west3";
 const pushConfig = globalThis.DASHBOARD_PUSH_CONFIG || {};
 
@@ -2550,8 +2551,15 @@ function initHomescreenGuide() {
   if (!homescreenGuideElements.modal || !platform || isHomescreenApp()) return;
 
   try {
-    if (localStorage.getItem(HOMESCREEN_GUIDE_STORAGE_KEY)) return;
-    localStorage.setItem(HOMESCREEN_GUIDE_STORAGE_KEY, "true");
+    const storedValue = localStorage.getItem(HOMESCREEN_GUIDE_STORAGE_KEY);
+    const lastShownAt = Number(storedValue);
+    if (storedValue && (!Number.isFinite(lastShownAt) || lastShownAt <= 0)) {
+      // Migrate the former boolean marker without showing the guide immediately again.
+      localStorage.setItem(HOMESCREEN_GUIDE_STORAGE_KEY, String(Date.now()));
+      return;
+    }
+    if (lastShownAt && Date.now() - lastShownAt < HOMESCREEN_GUIDE_REPEAT_MS) return;
+    localStorage.setItem(HOMESCREEN_GUIDE_STORAGE_KEY, String(Date.now()));
   } catch {
     // If browser storage is unavailable, showing the guide is still safe.
   }

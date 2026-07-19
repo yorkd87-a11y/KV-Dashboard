@@ -195,7 +195,7 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
 ## Ergänzungen
 
 ### [x] Homescreen-Anleitung bei Browser-Aufruf
-- Mobile Browser erkennen und beim ersten Aufruf eine iPhone-/Android-Anleitung anzeigen. Bereits installierte Homescreen-Apps überspringen den Hinweis automatisch.
+- Mobile Browser erkennen und beim ersten Aufruf sowie nach sieben Tagen erneut eine iPhone-/Android-Anleitung anzeigen. Bereits installierte Homescreen-Apps überspringen den Hinweis automatisch.
 
 ## Reihenfolge-Empfehlung
 1. **Paket A (größter Effekt):** Punkt 1, 2, 3
