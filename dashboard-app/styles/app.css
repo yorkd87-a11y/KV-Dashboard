@@ -158,6 +158,26 @@
   line-height: 1;
 }
 
+.header-alert-button {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 10px;
+  display: inline-grid;
+  place-items: center;
+  background: linear-gradient(135deg, #b42318 0%, #7a271a 100%);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.2rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.header-alert-button[hidden] {
+  display: none;
+}
+
 /* =====================================================
    WORKSPACE
    ===================================================== */

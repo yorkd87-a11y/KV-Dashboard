@@ -23,6 +23,7 @@ const panels = {
 };
 const mobileNav = document.getElementById("mobileNav");
 const mobileToggle = document.querySelector(".mobile-menu-toggle");
+const headerAlertButton = document.getElementById("headerAlertButton");
 const workspace = document.querySelector(".workspace");
 const workspaceSide = document.querySelector(".workspace-side");
 const listTargets = {
@@ -359,6 +360,15 @@ function getPendingKvEvents() {
 
 function getExpiredKvEventsNeedingCleanup() {
   return getVisibleEvents("kv").filter((eventItem) => needsExpiredKvCleanup(eventItem));
+}
+
+function getFirstKvEventNeedingReview() {
+  return getExpiredKvEventsNeedingCleanup()[0] || getPendingKvEvents()[0] || null;
+}
+
+function renderHeaderAlert() {
+  if (!headerAlertButton) return;
+  headerAlertButton.hidden = !getFirstKvEventNeedingReview();
 }
 
 function getCrossPlatformButtonLabel(type, eventItem) {
@@ -1208,6 +1218,7 @@ function render() {
   renderHomeList("mario");
   renderTypeList("kv");
   renderTypeList("mario");
+  renderHeaderAlert();
   updateInspectorVisibility();
   renderInspector();
   renderEditor();
@@ -2009,6 +2020,16 @@ function bindEvents() {
   mobileToggle?.addEventListener("click", () => {
     setMobileNavOpen(!appState.mobileNavOpen);
     render();
+  });
+
+  headerAlertButton?.addEventListener("click", () => {
+    const target = getFirstKvEventNeedingReview();
+    if (!target) return;
+    setSelectedId("kv", target.id);
+    setActiveTab("kv");
+    setMobileNavOpen(false);
+    render();
+    inspectorStage?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 
   createKvButton?.addEventListener("click", () => openEditor("kv"));
