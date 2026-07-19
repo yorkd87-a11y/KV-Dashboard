@@ -440,7 +440,7 @@
   height: 34px;
   border: none;
   border-radius: 50%;
-  background: rgba(16, 24, 40, 0.06);
+  background: transparent;
   color: #475467;
   font-size: 1.05rem;
   display: inline-grid;
