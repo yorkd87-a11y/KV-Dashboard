@@ -8,9 +8,9 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="./assets/icons/dashboard-icon.png">
   <link rel="apple-touch-icon" href="./assets/icons/dashboard-icon.png">
-  <link rel="stylesheet" href="./styles/base.css?v=20260719-11">
-  <link rel="stylesheet" href="./styles/app.css?v=20260719-11">
-  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-11">
+  <link rel="stylesheet" href="./styles/base.css?v=20260719-15">
+  <link rel="stylesheet" href="./styles/app.css?v=20260719-15">
+  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-15">
 </head>
 <body>
   <div class="app-shell">
@@ -101,11 +101,9 @@
                   <p class="eyebrow">Bereich</p>
                   <h3>Mario Marschall</h3>
                 </div>
-                <div class="surface-head-aside">
-                  <span class="status-pill status-warm" id="mario-count">0 aktiv</span>
-                  <button class="secondary-button surface-new-btn" type="button" data-action="create-event" data-event-type="mario">+ Neuer Termin</button>
-                </div>
+                <button class="secondary-button surface-new-btn" type="button" data-action="create-event" data-event-type="mario">+ Neuer Termin</button>
               </div>
+              <div class="status-chip-row" id="mario-status-chips"></div>
               <div class="event-stack event-stack-wide" id="mario-list"></div>
             </article>
           </section>
@@ -159,11 +157,11 @@
             <div class="editor-step-nav" id="editorStepNav"></div>
             <p class="support-copy editor-step-copy" id="editorStepCopy"></p>
 
-            <!-- KV Schritt 1: Bild -->
-            <section class="editor-step-panel" data-kv-step="0">
+            <!-- Bild-Schritt für Kulturverein und Mario -->
+            <section class="editor-step-panel" data-kv-step="0" data-mario-step="0">
               <div class="editor-img-block">
                 <div class="editor-img-preview" id="editorImgPreview">
-                  <span class="editor-img-icon">&#128247;</span>
+                  <svg class="editor-img-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17.5 7h2.5A2 2 0 0 1 22 9v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Zm8 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg>
                   <span class="editor-img-hint">Bild vom Gerät hochladen</span>
                 </div>
                 <label class="form-field form-field-full">
@@ -173,8 +171,8 @@
               </div>
             </section>
 
-            <!-- KV Schritt 2 / Mario Schritt 1: Inhalt -->
-            <section class="editor-step-panel" data-kv-step="1" data-mario-step="0">
+            <!-- KV Schritt 2 / Mario Schritt 2: Inhalt -->
+            <section class="editor-step-panel" data-kv-step="1" data-mario-step="1">
               <div class="editor-blocks">
                 <div class="editor-field-block">
                   <label class="form-field">
@@ -199,8 +197,8 @@
               </div>
             </section>
 
-            <!-- KV Schritt 3 / Mario Schritt 2: Termin -->
-            <section class="editor-step-panel" data-kv-step="2" data-mario-step="1">
+            <!-- KV Schritt 3 / Mario Schritt 3: Termin -->
+            <section class="editor-step-panel" data-kv-step="2" data-mario-step="2">
               <div class="editor-blocks">
 
                 <!-- Datum -->
@@ -270,8 +268,8 @@
               </div>
             </section>
 
-            <!-- KV Schritt 4 / Mario Schritt 3: Ausgabe & Einstellungen -->
-            <section class="editor-step-panel" data-kv-step="3" data-mario-step="2">
+            <!-- KV Schritt 4 / Mario Schritt 4: Ausgabe & Einstellungen -->
+            <section class="editor-step-panel" data-kv-step="3" data-mario-step="3">
               <div class="editor-blocks">
                 <!-- Button-Vorlage (nur Mario) -->
                 <div class="editor-field-block" data-editor-only="mario">
@@ -317,7 +315,7 @@
                   <label class="form-field">
                     <span>Bild-URL</span>
                     <input type="url" id="editor-fBild" placeholder="https://...">
-                    <small class="field-note" data-editor-only="kv">Wird automatisch gesetzt wenn du in Schritt 1 ein Bild hochlädst.</small>
+                    <small class="field-note">Lade ein Bild im ersten Schritt hoch oder füge hier eine Bild-URL ein.</small>
                   </label>
                 </div>
               </div>
@@ -381,6 +379,6 @@
 
   <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
 
-  <script type="module" src="./scripts/app.js?v=20260719-11"></script>
+  <script type="module" src="./scripts/app.js?v=20260719-15"></script>
 </body>
 </html>

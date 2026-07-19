@@ -55,7 +55,7 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
   3. In `renderEmptyState`-Aufrufstellen unterscheiden: wenn `!appState.loaded[type]` → Skeleton-Markup (z. B. 2-3 `<div class="event-row-skeleton">` mit CSS-Shimmer) statt „Noch nichts da“.
   4. Neue CSS-Klasse `.event-row-skeleton` in `app.css` (Pulsieren via `@keyframes` + `opacity`/`background-position`).
 
-### [ ] 4. Bild-Upload auch für Mario-Termine
+### [x] 4. Bild-Upload auch für Mario-Termine
 - **Was:** Gleicher Foto-Upload-Mechanismus wie bei KV (Canvas-Resize) auch im Mario-Editor; zusätzlich Vorschaufläche direkt antippbar machen.
 - **Warum:** Aktuell hat Mario nur ein Bild-URL-Textfeld – auf dem Handy tippt niemand eine URL.
 - **Wo:**
@@ -69,7 +69,7 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
   3. `editorImgPreview` (Zeile 156-159) klickbar machen: `cursor: pointer` + Klick-Listener der `editorElements.fields.bildFile.click()` auslöst (statt nur das kleine `<input type="file">`-Feld selbst).
   4. `editorLinkHint`/Bild-URL-Feld-Hinweistext (Zeile 311) ggf. für Mario anpassen.
 
-### [ ] 5. Status-Chips als Filter + auch bei Mario
+### [x] 5. Status-Chips als Filter + auch bei Mario
 - **Was:** KV-Chips (aktiv/bald/abgelaufen/pausiert) antippbar → filtert die Liste; gleiches Chip-System auch im Mario-Tab statt der „X gesamt“-Pille.
 - **Warum:** Schnellster Weg, bei wachsender Eventzahl gezielt zu arbeiten; Konsistenz zwischen den Tabs.
 - **Wo:**

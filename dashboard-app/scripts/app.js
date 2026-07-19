@@ -2,6 +2,7 @@
   appState,
   setActiveTab,
   setEvents,
+  setStatusFilter,
   setSelectedId
 } from "./state.js";
 import {
@@ -36,10 +37,12 @@ const listTargets = {
 };
 const countTargets = {
   homeKv: document.getElementById("home-kv-count"),
-  homeMario: document.getElementById("home-mario-count"),
-  mario: document.getElementById("mario-count")
+  homeMario: document.getElementById("home-mario-count")
 };
-const kvStatusChipsContainer = document.getElementById("kv-status-chips");
+const statusChipContainers = {
+  kv: document.getElementById("kv-status-chips"),
+  mario: document.getElementById("mario-status-chips")
+};
 const inspectorStage = document.getElementById("inspector-stage");
 const createKvButton = document.getElementById("create-kv-button");
 const createMarioButton = document.getElementById("create-mario-button");
@@ -289,6 +292,11 @@ function getVisibleEvents(type) {
   return appState.events[type].filter((eventItem) => !isEventArchived(eventItem));
 }
 
+function getFilteredVisibleEvents(type) {
+  const activeFilter = appState.statusFilter[type];
+  return getVisibleEvents(type).filter((eventItem) => !activeFilter || getStatus(eventItem).className === activeFilter);
+}
+
 function getHomeEvents(type) {
   return getVisibleEvents(type)
     .filter((eventItem) => eventItem.aktiv && !isEventExpired(eventItem))
@@ -461,8 +469,9 @@ function getEditorSteps(type) {
     ];
   }
   return [
-    { label: "Inhalt",      copy: "Titel und Beschreibung." },
-    { label: "Termin",      copy: "Datum und Ort." },
+    { label: "Bild",          copy: "Terminbild vom Gerät hochladen." },
+    { label: "Inhalt",        copy: "Titel und Beschreibung." },
+    { label: "Termin",        copy: "Datum und Ort." },
     { label: "Link & Ausgabe", copy: "Bild, Button und Ziel-Link." }
   ];
 }
@@ -478,9 +487,9 @@ function getEditorStepValidationMessage(type, stepIndex, draft) {
     if (stepIndex === 2 && !draft.datum) return { message: "Bitte zuerst ein Datum auswählen.", fieldId: "editor-fDatum" };
     if (stepIndex === 3) return validateDraft(type, draft);
   } else {
-    if (stepIndex === 0 && !draft.titel) return { message: "Bitte zuerst einen Titel eintragen.", fieldId: "editor-fTitel" };
-    if (stepIndex === 1 && !draft.datum) return { message: "Bitte zuerst ein Datum auswählen.", fieldId: "editor-fDatum" };
-    if (stepIndex === 2) return validateDraft(type, draft);
+    if (stepIndex === 1 && !draft.titel) return { message: "Bitte zuerst einen Titel eintragen.", fieldId: "editor-fTitel" };
+    if (stepIndex === 2 && !draft.datum) return { message: "Bitte zuerst ein Datum auswählen.", fieldId: "editor-fDatum" };
+    if (stepIndex === 3) return validateDraft(type, draft);
   }
 
   return { message: "", fieldId: "" };
@@ -1066,9 +1075,12 @@ function renderTypeList(type) {
     return;
   }
 
-  const events = getVisibleEvents(type);
+  const events = getFilteredVisibleEvents(type);
   if (!events.length) {
-    renderEmptyState(target, "Hier werden die Firestore-Einträge angezeigt, sobald Daten vorhanden sind.");
+    const emptyText = appState.statusFilter[type]
+      ? "Für diesen Status gibt es aktuell keine Einträge."
+      : "Hier werden die Firestore-Einträge angezeigt, sobald Daten vorhanden sind.";
+    renderEmptyState(target, emptyText);
     return;
   }
 
@@ -1089,15 +1101,16 @@ function renderCounts() {
     ? `${activeKvCount} aktiv / ${pendingKvEvents.length} offen`
     : `${activeKvCount} aktiv`;
   countTargets.homeMario.textContent = `${activeMarioCount} aktiv`;
-  countTargets.mario.textContent = `${activeMarioCount} aktiv`;
-  renderKvStatusChips(kvEvents);
+  renderStatusChips("kv", kvEvents);
+  renderStatusChips("mario", marioEvents);
 }
 
-function renderKvStatusChips(kvEvents) {
-  if (!kvStatusChipsContainer) return;
+function renderStatusChips(type, events) {
+  const container = statusChipContainers[type];
+  if (!container) return;
 
   const counts = { live: 0, soon: 0, expired: 0, off: 0 };
-  kvEvents.forEach((eventItem) => {
+  events.forEach((eventItem) => {
     const status = getStatus(eventItem);
     if (counts[status.className] !== undefined) counts[status.className] += 1;
   });
@@ -1109,12 +1122,26 @@ function renderKvStatusChips(kvEvents) {
     { tone: "off", count: counts.off, label: "pausiert" }
   ];
 
-  kvStatusChipsContainer.innerHTML = chipDefs.map((chip) => `
-    <span class="status-chip status-chip-${chip.tone}">
+  container.innerHTML = chipDefs.map((chip) => {
+    const isActive = appState.statusFilter[type] === chip.tone;
+    const actionLabel = isActive
+      ? `${chip.label}-Filter aufheben`
+      : `Nach ${chip.label} filtern`;
+    return `
+    <button
+      class="status-chip status-chip-${chip.tone}${isActive ? " is-active" : ""}"
+      type="button"
+      data-action="toggle-status-filter"
+      data-status-type="${type}"
+      data-status="${chip.tone}"
+      aria-pressed="${isActive}"
+      aria-label="${actionLabel}"
+    >
       <span class="status-chip-dot"></span>
       <strong>${chip.count}</strong> ${chip.label}
-    </span>
-  `).join("");
+    </button>
+  `;
+  }).join("");
 }
 
 function getPreferredInspectorType() {
@@ -1123,7 +1150,7 @@ function getPreferredInspectorType() {
 
 function getSelectedEventForType(type) {
   if (!type) return null;
-  const events = getVisibleEvents(type);
+  const events = getFilteredVisibleEvents(type);
   const selectedId = appState.selectedIds[type];
   return events.find((eventItem) => eventItem.id === selectedId) || events[0] || null;
 }
@@ -1454,13 +1481,13 @@ function applyEditorStepVisibility() {
   });
 }
 
-function updateKvImagePreview(src) {
+function updateEditorImagePreview(src) {
   const el = editorElements.imgPreview;
   if (!el) return;
   if (src) {
-    el.innerHTML = `<img src="${escapeHtml(src)}" alt="Vorschau">`;
+    el.innerHTML = `<img src="${escapeHtml(src)}" alt="Bildvorschau">`;
   } else {
-    el.innerHTML = `<span class="editor-img-icon">&#128247;</span><span class="editor-img-hint">Bild vom Gerät hochladen</span>`;
+    el.innerHTML = `<svg class="editor-img-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3l1.5-2h7L17.5 7h2.5A2 2 0 0 1 22 9v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2Zm8 9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/></svg><span class="editor-img-hint">Bild vom Gerät hochladen</span>`;
   }
 }
 
@@ -1601,9 +1628,10 @@ function openEditor(type, eventId = null) {
   editorElements.eyebrow.textContent = eventId ? `${getTypeLabel(type)} bearbeiten` : `Neuer Eintrag für ${getTypeLabel(type)}`;
   editorElements.heading.textContent = eventId ? "Eintrag aktualisieren" : "Eintrag anlegen";
   fillEditorForm(draft);
+  if (editorElements.fields.bildFile) editorElements.fields.bildFile.value = "";
   editorElements.fields.crossPublish.checked = !!linkedTargetId;
   editorState.initialDraftSignature = getDraftSignature(readEditorDraft());
-  if (type === "kv") updateKvImagePreview(draft.bild || "");
+  updateEditorImagePreview(draft.bild || "");
   render();
 }
 
@@ -2022,8 +2050,7 @@ async function confirmDeleteEvent(mode = "single") {
   }
 }
 
-function syncSelection(type) {
-  const events = getVisibleEvents(type);
+function syncSelection(type, events = getVisibleEvents(type)) {
   const selectedId = appState.selectedIds[type];
   if (events.some((eventItem) => eventItem.id === selectedId)) return;
 
@@ -2088,6 +2115,16 @@ function handleActionClick(actionTrigger) {
     const preset = actionTrigger.getAttribute("data-preset");
     if (!preset) return;
     selectMarioLinkPreset(preset);
+    return;
+  }
+
+  if (action === "toggle-status-filter") {
+    const type = actionTrigger.getAttribute("data-status-type");
+    const status = actionTrigger.getAttribute("data-status");
+    if (!type || !status || !Object.prototype.hasOwnProperty.call(appState.statusFilter, type)) return;
+    setStatusFilter(type, appState.statusFilter[type] === status ? null : status);
+    syncSelection(type, getFilteredVisibleEvents(type));
+    render();
     return;
   }
 
@@ -2207,7 +2244,7 @@ function bindEvents() {
   editorElements.fields.bildFile?.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    updateKvImagePreview(URL.createObjectURL(file));
+    updateEditorImagePreview(URL.createObjectURL(file));
     try {
       const dataUrl = await resizeImageToDataUrl(file);
       editorElements.fields.bild.value = dataUrl;
@@ -2282,7 +2319,7 @@ function initData() {
     "kv",
     (events) => {
       setEvents("kv", events);
-      syncSelection("kv");
+      syncSelection("kv", getFilteredVisibleEvents("kv"));
       render();
       maybeShowKvReminder();
     },
@@ -2295,7 +2332,7 @@ function initData() {
     "mario",
     (events) => {
       setEvents("mario", events);
-      syncSelection("mario");
+      syncSelection("mario", getFilteredVisibleEvents("mario"));
       render();
     },
     (error) => {
