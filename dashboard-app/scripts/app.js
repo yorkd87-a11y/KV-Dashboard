@@ -362,13 +362,30 @@ function getExpiredKvEventsNeedingCleanup() {
   return getVisibleEvents("kv").filter((eventItem) => needsExpiredKvCleanup(eventItem));
 }
 
-function getFirstKvEventNeedingReview() {
-  return getExpiredKvEventsNeedingCleanup()[0] || getPendingKvEvents()[0] || null;
+function needsExpiredMarioReview(eventItem) {
+  return !!eventItem
+    && !isEventArchived(eventItem)
+    && !!eventItem.aktiv
+    && isEventExpired(eventItem);
+}
+
+function getExpiredMarioEventsNeedingReview() {
+  return getVisibleEvents("mario").filter((eventItem) => needsExpiredMarioReview(eventItem));
+}
+
+function getFirstEventNeedingReview() {
+  const kvEventItem = getExpiredKvEventsNeedingCleanup()[0] || getPendingKvEvents()[0] || null;
+  if (kvEventItem) return { type: "kv", eventItem: kvEventItem };
+
+  const marioEventItem = getExpiredMarioEventsNeedingReview()[0] || null;
+  if (marioEventItem) return { type: "mario", eventItem: marioEventItem };
+
+  return null;
 }
 
 function renderHeaderAlert() {
   if (!headerAlertButton) return;
-  headerAlertButton.hidden = !getFirstKvEventNeedingReview();
+  headerAlertButton.hidden = !getFirstEventNeedingReview();
 }
 
 function getCrossPlatformButtonLabel(type, eventItem) {
@@ -1097,6 +1114,37 @@ function buildExpiredKvWorkflow(eventItem) {
   return "";
 }
 
+function buildExpiredMarioWorkflow(eventItem) {
+  if (!needsExpiredMarioReview(eventItem)) return "";
+
+  return `
+    <div class="preview-workflow preview-workflow-ready">
+      <strong>Abgelaufener Termin</strong>
+      <p>Dieser Mario-Termin ist abgelaufen. Jetzt entscheiden, ob die Karte archiviert oder dauerhaft gelöscht werden soll.</p>
+      <div class="preview-workflow-actions">
+        <button
+          class="secondary-button"
+          type="button"
+          data-action="archive-event"
+          data-event-type="mario"
+          data-event-id="${eventItem.id}"
+        >
+          Jetzt archivieren
+        </button>
+        <button
+          class="danger-button"
+          type="button"
+          data-action="delete-event"
+          data-event-type="mario"
+          data-event-id="${eventItem.id}"
+        >
+          Jetzt löschen
+        </button>
+      </div>
+    </div>
+  `;
+}
+
 function renderInspector() {
   if (!inspectorStage) return;
 
@@ -1108,13 +1156,15 @@ function renderInspector() {
   }
 
   const linkedTarget = getCrossPlatformTarget(type, eventItem);
-  const kvWorkflow = type === "kv" ? buildExpiredKvWorkflow(eventItem) : "";
-  const isKvWorkflowActive = !!kvWorkflow;
+  const reviewWorkflow = type === "kv"
+    ? buildExpiredKvWorkflow(eventItem)
+    : buildExpiredMarioWorkflow(eventItem);
+  const isReviewWorkflowActive = !!reviewWorkflow;
 
   const actions =     `
     <div class="preview-actions">
-      ${kvWorkflow}
-      ${!isKvWorkflowActive ? `
+      ${reviewWorkflow}
+      ${!isReviewWorkflowActive ? `
       ${linkedTarget.id ? `
       <button
         class="secondary-button"
@@ -2023,10 +2073,10 @@ function bindEvents() {
   });
 
   headerAlertButton?.addEventListener("click", () => {
-    const target = getFirstKvEventNeedingReview();
+    const target = getFirstEventNeedingReview();
     if (!target) return;
-    setSelectedId("kv", target.id);
-    setActiveTab("kv");
+    setSelectedId(target.type, target.eventItem.id);
+    setActiveTab(target.type);
     setMobileNavOpen(false);
     render();
     inspectorStage?.scrollIntoView({ behavior: "smooth", block: "start" });
