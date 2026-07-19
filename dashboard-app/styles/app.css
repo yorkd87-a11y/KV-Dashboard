@@ -33,13 +33,9 @@
 .brand-mark {
   width: 48px;
   height: 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: linear-gradient(145deg, var(--bg) 0%, #1f2937 100%);
-  color: #fff;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
 }
 
 .brand-block h1,
@@ -219,6 +215,17 @@
   gap: 10px;
   align-content: start;
   justify-content: flex-end;
+}
+
+.intro-actions .quick-add-button {
+  border-radius: 8px;
+  font-size: 0.85rem;
+  padding: 10px 16px;
+}
+
+.intro-actions .quick-add-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .surface-grid {
