@@ -2374,13 +2374,7 @@ function bindEvents() {
 
   createKvButton?.addEventListener("click", () => openEditor("kv"));
   createMarioButton?.addEventListener("click", () => openEditor("mario"));
-  pushElements.action?.addEventListener("click", () => {
-    if (pushElements.action.dataset.pushAction === "disable") {
-      void disablePushReminders();
-    } else {
-      void enablePushReminders();
-    }
-  });
+  pushElements.action?.addEventListener("click", () => void enablePushReminders());
 
   editorElements.close?.addEventListener("click", closeEditor);
   editorElements.cancel?.addEventListener("click", closeEditor);
@@ -2548,7 +2542,8 @@ function renderPushReminderControl() {
   if (!pushElements.panel || !pushElements.status || !pushElements.action) return;
 
   const permission = getPushPermission();
-  const showPanel = isPushConfigured() && pushSupported;
+  const remindersActive = permission === "granted" && pushToken && !pushSetupError;
+  const showPanel = isPushConfigured() && pushSupported && !remindersActive;
   pushElements.panel.hidden = !showPanel;
   if (!showPanel) return;
 
@@ -2561,13 +2556,6 @@ function renderPushReminderControl() {
   }
 
   pushElements.action.hidden = false;
-  if (permission === "granted" && pushToken && !pushSetupError) {
-    pushElements.status.textContent = "Erinnerungen sind aktiv. Bei offenen Aufgaben erhältst du höchstens alle vier Tage einen Hinweis.";
-    pushElements.action.textContent = "Erinnerungen deaktivieren";
-    pushElements.action.dataset.pushAction = "disable";
-    return;
-  }
-
   if (permission === "granted") {
     pushElements.status.textContent = pushSetupError
       ? "Die Systemfreigabe ist erteilt, aber das Gerät konnte noch nicht verbunden werden."
