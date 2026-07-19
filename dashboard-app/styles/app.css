@@ -239,8 +239,8 @@
 
 .intro-actions .quick-add-button {
   border-radius: 8px;
-  font-size: 0.85rem;
-  padding: 10px 16px;
+  font-size: 0.8rem;
+  padding: 9px 12px;
 }
 
 .intro-actions .quick-add-button:disabled {
