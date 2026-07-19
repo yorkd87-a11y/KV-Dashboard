@@ -8,9 +8,9 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="./assets/icons/dashboard-icon.png">
   <link rel="apple-touch-icon" href="./assets/icons/dashboard-icon.png">
-  <link rel="stylesheet" href="./styles/base.css?v=20260719-20">
-  <link rel="stylesheet" href="./styles/app.css?v=20260719-20">
-  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-20">
+  <link rel="stylesheet" href="./styles/base.css?v=20260719-22">
+  <link rel="stylesheet" href="./styles/app.css?v=20260719-22">
+  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-22">
 </head>
 <body>
   <div class="app-shell">
@@ -57,6 +57,15 @@
               <button class="secondary-button quick-add-button" type="button" id="create-mario-button">Mario Event</button>
               <button class="secondary-button quick-add-button" type="button" id="create-partner-button" disabled title="Bald verfügbar – noch kein Bereich angebunden">Weitere Seite</button>
             </div>
+          </section>
+
+          <section class="notification-panel" id="pushReminderPanel" aria-live="polite" hidden>
+            <div>
+              <p class="eyebrow">Erinnerungen</p>
+              <h2>Offene Aufgaben im Blick</h2>
+              <p class="support-copy" id="pushReminderStatus">Du erhältst höchstens alle vier Tage eine Erinnerung, solange Aufgaben offen sind.</p>
+            </div>
+            <button class="secondary-button notification-action" type="button" id="pushReminderButton">Erinnerungen aktivieren</button>
           </section>
 
           <section class="surface-grid">
@@ -405,6 +414,7 @@
 
   <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
 
-  <script type="module" src="./scripts/app.js?v=20260719-20"></script>
+  <script src="./push-config.js?v=20260719-22"></script>
+  <script type="module" src="./scripts/app.js?v=20260719-22"></script>
 </body>
 </html>

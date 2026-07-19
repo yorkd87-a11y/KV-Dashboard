@@ -6,17 +6,23 @@
   setSelectedId
 } from "./state.js";
 import {
+  kvApp,
   patchEventDocument,
   removeEventDocument,
   saveEventDocument,
   subscribeToEvents
 } from "./firebase.js";
+import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-messaging.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-functions.js";
 
 const KV_TICKET_FORM_URL = "https://form.jotform.com/251081662723050";
 const MARIO_TICKET_URL = "https://www.kaufmuseum.de/tickets";
 const APP_VERSION = new URL(import.meta.url).searchParams.get("v") || "unknown";
 const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 const TOAST_AUTO_CLOSE_MS = 5000;
+const PUSH_TOKEN_STORAGE_KEY = "dashboard-push-token";
+const PUSH_FUNCTION_REGION = "europe-west3";
+const pushConfig = globalThis.DASHBOARD_PUSH_CONFIG || {};
 
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
 const panels = {
@@ -61,6 +67,11 @@ const createFabButton = document.getElementById("createFabButton");
 const createKvButton = document.getElementById("create-kv-button");
 const createMarioButton = document.getElementById("create-mario-button");
 const toastHost = document.getElementById("toastHost");
+const pushElements = {
+  panel: document.getElementById("pushReminderPanel"),
+  status: document.getElementById("pushReminderStatus"),
+  action: document.getElementById("pushReminderButton")
+};
 const confirmElements = {
   modal: document.getElementById("confirmModal"),
   message: document.getElementById("confirmMessage"),
@@ -68,6 +79,12 @@ const confirmElements = {
   deleteSingle: document.getElementById("confirmDeleteSingleButton"),
   confirm: document.getElementById("confirmDeleteButton")
 };
+
+let pushSupported = false;
+let pushToken = localStorage.getItem(PUSH_TOKEN_STORAGE_KEY) || "";
+let pushSetupError = false;
+let pushSetupInProgress = false;
+let pushMessagingRegistration = null;
 
 const editorElements = {
   modal: document.getElementById("editorModal"),
@@ -342,12 +359,12 @@ function getStatus(eventItem) {
     return { label: "Archiviert", className: "archived" };
   }
 
-  if (!eventItem.aktiv) {
-    return { label: "Inaktiv", className: "off" };
+  if (isEventExpired(eventItem)) {
+    return { label: "Beendet", className: "expired" };
   }
 
-  if (isEventExpired(eventItem)) {
-    return { label: "Abgelaufen", className: "expired" };
+  if (!eventItem.aktiv) {
+    return { label: "Inaktiv", className: "off" };
   }
 
   if (!eventItem.datum) {
@@ -444,7 +461,6 @@ function getExpiredKvEventsNeedingCleanup() {
 function needsExpiredMarioReview(eventItem) {
   return !!eventItem
     && !isEventArchived(eventItem)
-    && !!eventItem.aktiv
     && isEventExpired(eventItem);
 }
 
@@ -1000,7 +1016,7 @@ function buildEventRow(type, eventItem, selected = false, isArchivedView = false
     ? `<span class="ticket-warning" title="Ticketformular noch offen">!</span>`
     : "";
   const expiredWarning = type === "kv" && needsExpiredKvCleanup(eventItem)
-    ? `<span class="ticket-warning is-danger" title="Abgelaufen: Ticketformular noch nicht entfernt bestätigt">!</span>`
+    ? `<span class="ticket-warning is-danger" title="Beendet: Ticketformular noch nicht entfernt bestätigt">!</span>`
     : "";
   const location = eventItem.ort
     ? `<span class="event-row-location">${escapeHtml(eventItem.ort)}</span>`
@@ -1192,7 +1208,7 @@ function renderStatusChips(type, events) {
   const chipDefs = [
     { tone: "live", count: counts.live, label: "aktiv", compactLabel: "aktiv" },
     { tone: "soon", count: counts.soon, label: "bald", compactLabel: "bald" },
-    { tone: "expired", count: counts.expired, label: "abgelaufen", compactLabel: "abgel." },
+    { tone: "expired", count: counts.expired, label: "beendet", compactLabel: "beendet" },
     { tone: "off", count: counts.off, label: "pausiert", compactLabel: "paus." }
   ];
 
@@ -1251,7 +1267,7 @@ function buildExpiredKvWorkflow(eventItem) {
     return `
       <div class="preview-workflow preview-workflow-danger">
         <strong>Ablauf-Alarm</strong>
-        <p>Diese Vereins-Veranstaltung ist abgelaufen. Bitte zuerst bestätigen, dass das Ticketformular wieder entfernt wurde.</p>
+        <p>Diese Vereins-Veranstaltung ist beendet. Bitte zuerst bestätigen, dass das Ticketformular wieder entfernt wurde.</p>
         <div class="preview-workflow-actions">
           <button
             class="primary-button"
@@ -1279,7 +1295,7 @@ function buildExpiredKvWorkflow(eventItem) {
   if (canResolveExpiredKvEvent(eventItem)) {
     return `
       <div class="preview-workflow preview-workflow-ready">
-        <strong>Abgelaufene Karte abschließen</strong>
+        <strong>Beendete Karte abschließen</strong>
         <p>Das Ticketformular ist erledigt. Jetzt kannst du entscheiden, ob die Karte archiviert oder dauerhaft gelöscht werden soll.</p>
         <div class="preview-workflow-actions">
           <button
@@ -1313,8 +1329,8 @@ function buildExpiredMarioWorkflow(eventItem) {
 
   return `
     <div class="preview-workflow preview-workflow-ready">
-      <strong>Abgelaufener Termin</strong>
-      <p>Dieser Mario-Termin ist abgelaufen. Jetzt entscheiden, ob die Karte archiviert oder dauerhaft gelöscht werden soll.</p>
+      <strong>Beendeter Termin</strong>
+      <p>Dieser Mario-Termin ist beendet. Jetzt entscheiden, ob die Karte archiviert oder dauerhaft gelöscht werden soll.</p>
       <div class="preview-workflow-actions">
         <button
           class="secondary-button"
@@ -1452,6 +1468,7 @@ function render() {
   });
 
   workspace?.classList.toggle("workspace--mario", appState.activeTab === "mario");
+  renderPushReminderControl();
 
   const activeEventType = ["kv", "mario"].includes(appState.activeTab) ? appState.activeTab : null;
   if (createFabButton) {
@@ -1803,8 +1820,8 @@ function maybeShowKvReminder() {
       reminderState.kvExpiredSignature = expiredSignature;
       const nextTitle = expiredKvEvents[0]?.titel || "einem Eintrag";
       const countText = expiredKvEvents.length === 1
-        ? `${nextTitle} ist abgelaufen, aber das Ticketformular wurde noch nicht als entfernt bestätigt.`
-        : `Es gibt noch ${expiredKvEvents.length} abgelaufene Vereins-Einträge mit offenem Ticketformular-Ablauf.`;
+        ? `${nextTitle} ist beendet, aber das Ticketformular wurde noch nicht als entfernt bestätigt.`
+        : `Es gibt noch ${expiredKvEvents.length} beendete Vereins-Einträge mit offenem Ticketformular-Ablauf.`;
 
       showToast("Ablauf prüfen", `${countText} Bitte zuerst den Ticketformular-Status abschließen und danach archivieren oder löschen.`);
       return;
@@ -2028,6 +2045,7 @@ function jumpToLinkedEvent(sourceType, sourceEventId) {
     return;
   }
 
+  setStatusFilter(linkedTarget.type, null);
   setSelectedId(linkedTarget.type, linkedTarget.id);
   setActiveTab(linkedTarget.type);
   render();
@@ -2347,6 +2365,7 @@ function bindEvents() {
   headerAlertButton?.addEventListener("click", () => {
     const target = getFirstEventNeedingReview();
     if (!target) return;
+    setStatusFilter(target.type, null);
     setSelectedId(target.type, target.eventItem.id);
     setActiveTab(target.type);
     render();
@@ -2355,6 +2374,13 @@ function bindEvents() {
 
   createKvButton?.addEventListener("click", () => openEditor("kv"));
   createMarioButton?.addEventListener("click", () => openEditor("mario"));
+  pushElements.action?.addEventListener("click", () => {
+    if (pushElements.action.dataset.pushAction === "disable") {
+      void disablePushReminders();
+    } else {
+      void enablePushReminders();
+    }
+  });
 
   editorElements.close?.addEventListener("click", closeEditor);
   editorElements.cancel?.addEventListener("click", closeEditor);
@@ -2510,9 +2536,153 @@ function initConnectivityStatus() {
   window.addEventListener("offline", renderConnectivityStatus);
 }
 
+function isPushConfigured() {
+  return !!pushConfig.vapidKey && !!pushConfig.firebaseConfig?.projectId;
+}
+
+function getPushPermission() {
+  return typeof Notification === "undefined" ? "unsupported" : Notification.permission;
+}
+
+function renderPushReminderControl() {
+  if (!pushElements.panel || !pushElements.status || !pushElements.action) return;
+
+  const permission = getPushPermission();
+  const showPanel = isPushConfigured() && pushSupported;
+  pushElements.panel.hidden = !showPanel;
+  if (!showPanel) return;
+
+  pushElements.action.disabled = pushSetupInProgress;
+
+  if (permission === "denied") {
+    pushElements.status.textContent = "Benachrichtigungen wurden in den Geräteeinstellungen blockiert.";
+    pushElements.action.hidden = true;
+    return;
+  }
+
+  pushElements.action.hidden = false;
+  if (permission === "granted" && pushToken && !pushSetupError) {
+    pushElements.status.textContent = "Erinnerungen sind aktiv. Bei offenen Aufgaben erhältst du höchstens alle vier Tage einen Hinweis.";
+    pushElements.action.textContent = "Erinnerungen deaktivieren";
+    pushElements.action.dataset.pushAction = "disable";
+    return;
+  }
+
+  if (permission === "granted") {
+    pushElements.status.textContent = pushSetupError
+      ? "Die Systemfreigabe ist erteilt, aber das Gerät konnte noch nicht verbunden werden."
+      : "Die Systemfreigabe ist erteilt. Verbinde dieses Gerät für Erinnerungen.";
+    pushElements.action.textContent = "Erinnerungen verbinden";
+    pushElements.action.dataset.pushAction = "enable";
+    return;
+  }
+
+  pushElements.status.textContent = "Du erhältst höchstens alle vier Tage eine Erinnerung, solange Aufgaben offen sind.";
+  pushElements.action.textContent = "Erinnerungen aktivieren";
+  pushElements.action.dataset.pushAction = "enable";
+}
+
+async function getPushDeviceToken() {
+  if (!isPushConfigured() || !pushSupported) return "";
+
+  if (!pushMessagingRegistration) {
+    const serviceWorkerRegistration = await navigator.serviceWorker.register("./firebase-messaging-sw.js");
+    await navigator.serviceWorker.ready;
+    pushMessagingRegistration = {
+      messaging: getMessaging(kvApp),
+      serviceWorkerRegistration
+    };
+  }
+
+  return getToken(pushMessagingRegistration.messaging, {
+    vapidKey: pushConfig.vapidKey,
+    serviceWorkerRegistration: pushMessagingRegistration.serviceWorkerRegistration
+  });
+}
+
+async function savePushDevice(token, enabled) {
+  const functions = getFunctions(kvApp, PUSH_FUNCTION_REGION);
+  const functionName = enabled ? "registerPushDevice" : "disablePushDevice";
+  await httpsCallable(functions, functionName)({ token });
+}
+
+async function enablePushReminders() {
+  if (!isPushConfigured() || !pushSupported || pushSetupInProgress) return;
+  if (getPushPermission() === "denied") {
+    renderPushReminderControl();
+    return;
+  }
+
+  pushSetupInProgress = true;
+  renderPushReminderControl();
+
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      return;
+    }
+
+    const token = await getPushDeviceToken();
+    if (!token) throw new Error("Für dieses Gerät konnte kein Push-Zugang erstellt werden.");
+
+    await savePushDevice(token, true);
+    pushToken = token;
+    pushSetupError = false;
+    localStorage.setItem(PUSH_TOKEN_STORAGE_KEY, token);
+    showToast("Erinnerungen aktiviert", "Dieses Gerät erhält bei offenen Aufgaben höchstens alle vier Tage einen Hinweis.");
+  } catch (error) {
+    pushSetupError = true;
+    showToast("Erinnerungen konnten nicht aktiviert werden", error?.message || "Bitte später erneut versuchen.", "error");
+  } finally {
+    pushSetupInProgress = false;
+    renderPushReminderControl();
+  }
+}
+
+async function disablePushReminders() {
+  if (pushSetupInProgress) return;
+
+  pushSetupInProgress = true;
+  renderPushReminderControl();
+
+  try {
+    if (pushToken) await savePushDevice(pushToken, false);
+    pushToken = "";
+    pushSetupError = false;
+    localStorage.removeItem(PUSH_TOKEN_STORAGE_KEY);
+    showToast("Erinnerungen deaktiviert", "Dieses Gerät erhält keine Aufgaben-Erinnerungen mehr.");
+  } catch (error) {
+    showToast("Deaktivieren fehlgeschlagen", error?.message || "Bitte später erneut versuchen.", "error");
+  } finally {
+    pushSetupInProgress = false;
+    renderPushReminderControl();
+  }
+}
+
+async function initPushReminders() {
+  if (!isPushConfigured()) return;
+
+  try {
+    pushSupported = await isSupported();
+    if (pushSupported && getPushPermission() === "granted") {
+      const token = await getPushDeviceToken();
+      if (token) {
+        await savePushDevice(token, true);
+        pushToken = token;
+        localStorage.setItem(PUSH_TOKEN_STORAGE_KEY, token);
+      }
+    }
+  } catch {
+    pushSetupError = true;
+  } finally {
+    renderPushReminderControl();
+  }
+}
+
 function init() {
   bindEvents();
   initConnectivityStatus();
+  void initPushReminders();
   initData();
   render();
   initUpdateCheck();

@@ -295,6 +295,36 @@
   cursor: not-allowed;
 }
 
+.notification-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
+  padding: 18px 22px;
+  border: 1px solid rgba(36, 92, 115, 0.16);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(36, 92, 115, 0.09), rgba(248, 245, 239, 0.95));
+}
+
+.notification-panel[hidden] {
+  display: none;
+}
+
+.notification-panel h2 {
+  margin: 0;
+  color: #253247;
+  font-size: 1rem;
+}
+
+.notification-panel .support-copy {
+  margin: 5px 0 0;
+}
+
+.notification-action {
+  flex-shrink: 0;
+}
+
 .surface-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

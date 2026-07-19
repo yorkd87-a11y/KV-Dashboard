@@ -70,7 +70,7 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
   4. `editorLinkHint`/Bild-URL-Feld-Hinweistext (Zeile 311) ggf. für Mario anpassen.
 
 ### [x] 5. Status-Chips als Filter + auch bei Mario
-- **Was:** KV-Chips (aktiv/bald/abgelaufen/pausiert) antippbar → filtert die Liste; gleiches Chip-System auch im Mario-Tab statt der „X gesamt“-Pille.
+- **Was:** KV-Chips (aktiv/bald/beendet/pausiert) antippbar → filtert die Liste; gleiches Chip-System auch im Mario-Tab statt der „X gesamt“-Pille.
 - **Warum:** Schnellster Weg, bei wachsender Eventzahl gezielt zu arbeiten; Konsistenz zwischen den Tabs.
 - **Wo:**
   - `scripts/app.js`: `renderKvStatusChips()` (Zeile 1045-1067), `renderCounts()` (Zeile 1030-1043), `renderTypeList()` (Zeile 1015-1028) – aktueller Filter fehlt komplett.
@@ -176,6 +176,19 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
 ### [x] 18. Offline-Hinweis
 - **Wo:** Neuer Code-Abschnitt in `app.js`, ähnlich `initUpdateCheck()` (Zeile 2255-2265).
 - **Wie:** `window.addEventListener("online"/"offline", ...)` → globalen State-Flag setzen, dezenten Banner (neues Element, z. B. `<div class="offline-banner" hidden>` in `index.html` nahe `.topbar`) ein-/ausblenden. Kein Firestore-spezifischer Retry-Code nötig, Firestore SDK cached/synct selbst; der Banner ist reines UI-Feedback.
+
+---
+
+## Push-Erinnerungen
+
+### [x] Freiwillige Aktivierung in der App
+- Button zum Aktivieren und Deaktivieren, Service Worker für Homescreen-Push und Vier-Tage-Hinweis pro Gerät.
+
+### [x] Geplanter Firebase-Erinnerungsdienst
+- Prüft beide Event-Bereiche täglich und sendet nur bei offenem Handlungsbedarf.
+
+### [ ] Firebase-Konto einrichten und Hintergrunddienst bereitstellen
+- VAPID-Schlüssel, Mario-Service-Konto als Secret und Deployment sind in `PUSH-ERINNERUNGEN.md` beschrieben.
 
 ---
 

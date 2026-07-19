@@ -185,6 +185,18 @@
     font-size: 0.8rem;
   }
 
+  .notification-panel {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 18px;
+  }
+
+  .notification-action {
+    width: 100%;
+    justify-content: center;
+  }
+
   .brand-mark {
     width: 40px;
     height: 40px;

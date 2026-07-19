@@ -12,7 +12,7 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
 
-const kvApp = initializeApp({
+export const kvApp = initializeApp({
   apiKey: "AIzaSyBeXuSL1RQBdulUUFIyXaWWb2sULS0W38o",
   authDomain: "kulturverein-ec831.firebaseapp.com",
   projectId: "kulturverein-ec831",
