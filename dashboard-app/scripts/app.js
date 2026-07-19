@@ -14,6 +14,8 @@ import {
 
 const KV_TICKET_FORM_URL = "https://form.jotform.com/251081662723050";
 const MARIO_TICKET_URL = "https://www.kaufmuseum.de/tickets";
+const APP_VERSION = new URL(import.meta.url).searchParams.get("v") || "unknown";
+const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
 const panels = {
@@ -340,6 +342,22 @@ function showToast(title, message = "", kind = "") {
 
 function closeToast() {
   if (toastHost) toastHost.innerHTML = "";
+}
+
+function showUpdateToast() {
+  if (!toastHost) return;
+  toastHost.innerHTML = `
+    <div class="toast-card is-update">
+      <div class="toast-copy">
+        <strong>Neue Version verfügbar</strong>
+        <p>Es gibt eine Aktualisierung fürs Dashboard.</p>
+      </div>
+      <div class="toast-actions">
+        <button class="primary-button" type="button" data-action="reload-app">Aktualisieren</button>
+        <button class="icon-button" type="button" data-action="close-toast" aria-label="Hinweis schließen">x</button>
+      </div>
+    </div>
+  `;
 }
 
 function getDeleteMessage(type, eventItem) {
@@ -2056,6 +2074,10 @@ function handleActionClick(actionTrigger) {
   if (action === "close-toast") {
     closeToast();
   }
+
+  if (action === "reload-app") {
+    window.location.href = `${window.location.pathname}?_v=${Date.now()}`;
+  }
 }
 
 function bindEvents() {
@@ -2188,10 +2210,45 @@ function initData() {
   );
 }
 
+let updateToastShown = false;
+let updateCheckInFlight = false;
+
+async function checkForUpdate() {
+  if (updateToastShown || updateCheckInFlight) return;
+  updateCheckInFlight = true;
+
+  try {
+    const res = await fetch(`./version.json?_=${Date.now()}`, { cache: "no-store" });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data?.version && data.version !== APP_VERSION) {
+      updateToastShown = true;
+      showUpdateToast();
+    }
+  } catch (error) {
+    // Offline oder Netzwerkfehler: still bleiben, naechster Check versucht es erneut.
+  } finally {
+    updateCheckInFlight = false;
+  }
+}
+
+function initUpdateCheck() {
+  checkForUpdate();
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") checkForUpdate();
+  });
+
+  window.addEventListener("pageshow", () => checkForUpdate());
+
+  setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS);
+}
+
 function init() {
   bindEvents();
   initData();
   render();
+  initUpdateCheck();
 }
 
 init();

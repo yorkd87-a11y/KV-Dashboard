@@ -1574,6 +1574,30 @@
   border-left-color: #b42318;
 }
 
+.toast-card.is-update {
+  border-left-color: var(--success);
+}
+
+.toast-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.toast-actions .primary-button {
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.toast-actions .icon-button {
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+}
+
 .toast-copy strong {
   display: block;
   margin-bottom: 3px;
