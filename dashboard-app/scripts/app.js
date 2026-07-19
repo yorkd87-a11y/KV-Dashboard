@@ -39,9 +39,9 @@ const listTargets = {
 const countTargets = {
   homeKv: document.getElementById("home-kv-count"),
   homeMario: document.getElementById("home-mario-count"),
-  kv: document.getElementById("kv-count"),
   mario: document.getElementById("mario-count")
 };
+const kvStatusChipsContainer = document.getElementById("kv-status-chips");
 const inspectorStage = document.getElementById("inspector-stage");
 const createKvButton = document.getElementById("create-kv-button");
 const createMarioButton = document.getElementById("create-mario-button");
@@ -1031,7 +1031,6 @@ function renderCounts() {
   const kvEvents = getVisibleEvents("kv");
   const marioEvents = getVisibleEvents("mario");
   const pendingKvEvents = getPendingKvEvents();
-  const expiredKvEvents = getExpiredKvEventsNeedingCleanup();
   const activeKvCount = kvEvents.filter((eventItem) => eventItem.aktiv && !isEventExpired(eventItem)).length;
   const activeMarioCount = marioEvents.filter((eventItem) => eventItem.aktiv && !isEventExpired(eventItem)).length;
 
@@ -1039,12 +1038,32 @@ function renderCounts() {
     ? `${activeKvCount} aktiv / ${pendingKvEvents.length} offen`
     : `${activeKvCount} aktiv`;
   countTargets.homeMario.textContent = `${activeMarioCount} offen`;
-  countTargets.kv.textContent = expiredKvEvents.length
-    ? `${kvEvents.length} sichtbar / ${expiredKvEvents.length} Ablauf offen`
-    : pendingKvEvents.length
-      ? `${kvEvents.length} sichtbar / ${pendingKvEvents.length} Ticket offen`
-      : `${kvEvents.length} sichtbar`;
   countTargets.mario.textContent = `${marioEvents.length} gesamt`;
+  renderKvStatusChips(kvEvents);
+}
+
+function renderKvStatusChips(kvEvents) {
+  if (!kvStatusChipsContainer) return;
+
+  const counts = { live: 0, soon: 0, expired: 0, off: 0 };
+  kvEvents.forEach((eventItem) => {
+    const status = getStatus(eventItem);
+    if (counts[status.className] !== undefined) counts[status.className] += 1;
+  });
+
+  const chipDefs = [
+    { tone: "live", count: counts.live, label: "aktiv" },
+    { tone: "soon", count: counts.soon, label: "bald" },
+    { tone: "expired", count: counts.expired, label: "abgelaufen" },
+    { tone: "off", count: counts.off, label: "pausiert" }
+  ];
+
+  kvStatusChipsContainer.innerHTML = chipDefs.map((chip) => `
+    <span class="status-chip status-chip-${chip.tone}">
+      <span class="status-chip-dot"></span>
+      <strong>${chip.count}</strong> ${chip.label}
+    </span>
+  `).join("");
 }
 
 function getPreferredInspectorType() {
