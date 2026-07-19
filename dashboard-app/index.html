@@ -2,15 +2,15 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Event Dashboard</title>
   <meta name="theme-color" content="#111827">
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="./assets/icons/dashboard-icon.png">
   <link rel="apple-touch-icon" href="./assets/icons/dashboard-icon.png">
-  <link rel="stylesheet" href="./styles/base.css?v=20260719-8">
-  <link rel="stylesheet" href="./styles/app.css?v=20260719-8">
-  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-8">
+  <link rel="stylesheet" href="./styles/base.css?v=20260719-11">
+  <link rel="stylesheet" href="./styles/app.css?v=20260719-11">
+  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-11">
 </head>
 <body>
   <div class="app-shell">
@@ -34,15 +34,8 @@
           Jotform
         </a>
         <button class="header-alert-button" type="button" id="headerAlertButton" aria-label="Es gibt offene Prüfungen" hidden>!</button>
-        <button class="mobile-menu-toggle" type="button" aria-expanded="false" aria-controls="mobileNav" aria-label="Navigation öffnen"></button>
       </div>
     </header>
-
-    <div class="mobile-nav" id="mobileNav" hidden>
-      <button class="mobile-nav-link is-active" type="button" data-tab="home">Start</button>
-      <button class="mobile-nav-link" type="button" data-tab="kv">Kulturverein</button>
-      <button class="mobile-nav-link" type="button" data-tab="mario">Mario</button>
-    </div>
 
     <main class="workspace">
       <section class="workspace-main">
@@ -55,6 +48,7 @@
               <button class="primary-button quick-add-button" type="button" id="create-kv-button">Vereins-Event</button>
               <button class="secondary-button quick-add-button" type="button" id="create-mario-button">Mario Event</button>
               <button class="secondary-button quick-add-button" type="button" id="create-partner-button" disabled title="Bald verfügbar – noch kein Bereich angebunden">Weitere Seite</button>
+              <a class="mobile-jotform-link" href="https://eu.jotform.com/build/251081662723050" target="_blank" rel="noopener noreferrer">Jotform öffnen</a>
             </div>
           </section>
 
@@ -76,7 +70,7 @@
                   <p class="eyebrow">Mario Marschall</p>
                   <h3>Nächste Termine</h3>
                 </div>
-                <span class="status-pill status-warm" id="home-mario-count">0 offen</span>
+                <span class="status-pill status-warm" id="home-mario-count">0 aktiv</span>
               </div>
               <div class="event-stack" id="home-mario-list"></div>
             </article>
@@ -108,7 +102,7 @@
                   <h3>Mario Marschall</h3>
                 </div>
                 <div class="surface-head-aside">
-                  <span class="status-pill status-warm" id="mario-count">0 gesamt</span>
+                  <span class="status-pill status-warm" id="mario-count">0 aktiv</span>
                   <button class="secondary-button surface-new-btn" type="button" data-action="create-event" data-event-type="mario">+ Neuer Termin</button>
                 </div>
               </div>
@@ -131,6 +125,21 @@
         </section>
       </aside>
     </main>
+
+    <nav class="mobile-tabbar" aria-label="Dashboard-Bereiche">
+      <button class="mobile-tabbar-button is-active" type="button" data-tab="home" aria-current="page">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+        <span>Start</span>
+      </button>
+      <button class="mobile-tabbar-button" type="button" data-tab="kv">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21V8l8-5 8 5v13M8 21v-5h8v5M8 11h.01M12 11h.01M16 11h.01"/></svg>
+        <span>Verein</span>
+      </button>
+      <button class="mobile-tabbar-button" type="button" data-tab="mario">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6 5.6 18.4"/></svg>
+        <span>Mario</span>
+      </button>
+    </nav>
   </div>
 
   <div class="editor-modal" id="editorModal" hidden>
@@ -243,7 +252,7 @@
                   </div>
                   <label class="form-field">
                     <span>Preis</span>
-                    <input type="text" id="editor-fPreis" maxlength="120">
+                    <input type="text" id="editor-fPreis" maxlength="120" inputmode="decimal">
                   </label>
                 </div>
 
@@ -254,7 +263,7 @@
                   </div>
                   <label class="form-field">
                     <span>Telefon</span>
-                    <input type="text" id="editor-fTelefon" maxlength="80">
+                    <input type="tel" id="editor-fTelefon" maxlength="80">
                   </label>
                 </div>
 
@@ -298,7 +307,7 @@
                 <div class="editor-field-block" data-editor-only="mario">
                   <label class="form-field">
                     <span>Link</span>
-                    <input type="url" id="editor-fLink" placeholder="https://...">
+                    <input type="url" id="editor-fLink" placeholder="https://..." autocapitalize="off" autocorrect="off" spellcheck="false">
                     <small class="field-note" id="editorLinkHint">Kein Link = kein Button auf der Website.</small>
                   </label>
                 </div>
@@ -372,8 +381,6 @@
 
   <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
 
-  <script type="module" src="./scripts/app.js?v=20260719-8"></script>
+  <script type="module" src="./scripts/app.js?v=20260719-11"></script>
 </body>
 </html>
-
-

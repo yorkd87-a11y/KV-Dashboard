@@ -1,9 +1,12 @@
 export const appState = {
   activeTab: "home",
-  mobileNavOpen: false,
   events: {
     kv: [],
     mario: []
+  },
+  loaded: {
+    kv: false,
+    mario: false
   },
   selectedIds: {
     kv: null,
@@ -15,12 +18,9 @@ export function setActiveTab(tab) {
   appState.activeTab = tab;
 }
 
-export function setMobileNavOpen(isOpen) {
-  appState.mobileNavOpen = isOpen;
-}
-
 export function setEvents(type, events) {
   appState.events[type] = events;
+  appState.loaded[type] = true;
 }
 
 export function setSelectedId(type, id) {

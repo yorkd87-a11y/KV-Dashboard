@@ -2,7 +2,6 @@
   appState,
   setActiveTab,
   setEvents,
-  setMobileNavOpen,
   setSelectedId
 } from "./state.js";
 import {
@@ -16,6 +15,7 @@ const KV_TICKET_FORM_URL = "https://form.jotform.com/251081662723050";
 const MARIO_TICKET_URL = "https://www.kaufmuseum.de/tickets";
 const APP_VERSION = new URL(import.meta.url).searchParams.get("v") || "unknown";
 const UPDATE_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const TOAST_AUTO_CLOSE_MS = 5000;
 
 const tabButtons = Array.from(document.querySelectorAll("[data-tab]"));
 const panels = {
@@ -23,8 +23,6 @@ const panels = {
   kv: document.getElementById("panel-kv"),
   mario: document.getElementById("panel-mario")
 };
-const mobileNav = document.getElementById("mobileNav");
-const mobileToggle = document.querySelector(".mobile-menu-toggle");
 const headerAlertButton = document.getElementById("headerAlertButton");
 const workspace = document.querySelector(".workspace");
 const workspaceSide = document.querySelector(".workspace-side");
@@ -100,7 +98,8 @@ const editorState = {
   mode: "create",
   eventId: null,
   saving: false,
-  stepIndex: 0
+  stepIndex: 0,
+  initialDraftSignature: ""
 };
 
 const confirmState = {
@@ -129,6 +128,8 @@ const editorPublishState = {
   targetType: null,
   targetId: null
 };
+
+let toastTimer = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -326,6 +327,10 @@ function getPlaceholder(type) {
 
 function showToast(title, message = "", kind = "") {
   if (!toastHost) return;
+  if (toastTimer) {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
 
   const safeTitle = escapeHtml(title);
   const safeMessage = escapeHtml(message);
@@ -338,14 +343,28 @@ function showToast(title, message = "", kind = "") {
       <button class="icon-button" type="button" data-action="close-toast" aria-label="Hinweis schließen">x</button>
     </div>
   `;
+
+  if (kind !== "error") {
+    toastTimer = window.setTimeout(() => {
+      closeToast();
+    }, TOAST_AUTO_CLOSE_MS);
+  }
 }
 
 function closeToast() {
+  if (toastTimer) {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
   if (toastHost) toastHost.innerHTML = "";
 }
 
 function showUpdateToast() {
   if (!toastHost) return;
+  if (toastTimer) {
+    clearTimeout(toastTimer);
+    toastTimer = null;
+  }
   toastHost.innerHTML = `
     <div class="toast-card is-update">
       <div class="toast-copy">
@@ -455,16 +474,16 @@ function clampEditorStep(index) {
 
 function getEditorStepValidationMessage(type, stepIndex, draft) {
   if (type === "kv") {
-    if (stepIndex === 1 && !draft.titel) return "Bitte zuerst einen Titel eintragen.";
-    if (stepIndex === 2 && !draft.datum) return "Bitte zuerst ein Datum auswählen.";
+    if (stepIndex === 1 && !draft.titel) return { message: "Bitte zuerst einen Titel eintragen.", fieldId: "editor-fTitel" };
+    if (stepIndex === 2 && !draft.datum) return { message: "Bitte zuerst ein Datum auswählen.", fieldId: "editor-fDatum" };
     if (stepIndex === 3) return validateDraft(type, draft);
   } else {
-    if (stepIndex === 0 && !draft.titel) return "Bitte zuerst einen Titel eintragen.";
-    if (stepIndex === 1 && !draft.datum) return "Bitte zuerst ein Datum auswählen.";
+    if (stepIndex === 0 && !draft.titel) return { message: "Bitte zuerst einen Titel eintragen.", fieldId: "editor-fTitel" };
+    if (stepIndex === 1 && !draft.datum) return { message: "Bitte zuerst ein Datum auswählen.", fieldId: "editor-fDatum" };
     if (stepIndex === 2) return validateDraft(type, draft);
   }
 
-  return "";
+  return { message: "", fieldId: "" };
 }
 
 function setEditorStep(nextStepIndex, options = {}) {
@@ -472,9 +491,10 @@ function setEditorStep(nextStepIndex, options = {}) {
   const targetIndex = clampEditorStep(nextStepIndex);
 
   if (targetIndex > editorState.stepIndex && !options.skipValidation) {
-    const validationMessage = getEditorStepValidationMessage(editorState.type, editorState.stepIndex, draft);
-    if (validationMessage) {
-      showToast("Schritt noch nicht fertig", validationMessage, "error");
+    const validationResult = getEditorStepValidationMessage(editorState.type, editorState.stepIndex, draft);
+    if (validationResult.message) {
+      showToast("Schritt noch nicht fertig", validationResult.message, "error");
+      focusEditorField(validationResult.fieldId);
       return false;
     }
   }
@@ -994,12 +1014,36 @@ function buildEventRow(type, eventItem, selected = false) {
 
 function renderEmptyState(target, text) {
   if (!target) return;
+  target.removeAttribute("aria-busy");
   target.innerHTML = `<div class="preview-empty is-light"><h4>Noch nichts da</h4><p>${escapeHtml(text)}</p></div>`;
+}
+
+function renderLoadingState(target, count = 2) {
+  if (!target) return;
+  target.setAttribute("aria-busy", "true");
+  target.innerHTML = `
+    <span class="visually-hidden" role="status">Einträge werden geladen.</span>
+    ${Array.from({ length: count }, () => `
+      <div class="event-row-skeleton" aria-hidden="true">
+        <div class="event-row-skeleton-thumb skeleton-block"></div>
+        <div class="event-row-skeleton-copy">
+          <span class="event-row-skeleton-line skeleton-block"></span>
+          <span class="event-row-skeleton-line event-row-skeleton-line--short skeleton-block"></span>
+          <span class="event-row-skeleton-line event-row-skeleton-line--medium skeleton-block"></span>
+        </div>
+      </div>
+    `).join("")}
+  `;
 }
 
 function renderHomeList(type) {
   const target = listTargets.home[type];
   if (!target) return;
+
+  if (!appState.loaded[type]) {
+    renderLoadingState(target);
+    return;
+  }
 
   const activeEvents = getHomeEvents(type);
   if (!activeEvents.length) {
@@ -1007,6 +1051,7 @@ function renderHomeList(type) {
     return;
   }
 
+  target.removeAttribute("aria-busy");
   target.innerHTML = activeEvents
     .map((eventItem) => buildEventRow(type, eventItem, appState.selectedIds[type] === eventItem.id))
     .join("");
@@ -1016,12 +1061,18 @@ function renderTypeList(type) {
   const target = listTargets[type];
   if (!target) return;
 
+  if (!appState.loaded[type]) {
+    renderLoadingState(target, 3);
+    return;
+  }
+
   const events = getVisibleEvents(type);
   if (!events.length) {
     renderEmptyState(target, "Hier werden die Firestore-Einträge angezeigt, sobald Daten vorhanden sind.");
     return;
   }
 
+  target.removeAttribute("aria-busy");
   target.innerHTML = events
     .map((eventItem) => buildEventRow(type, eventItem, appState.selectedIds[type] === eventItem.id))
     .join("");
@@ -1037,8 +1088,8 @@ function renderCounts() {
   countTargets.homeKv.textContent = pendingKvEvents.length
     ? `${activeKvCount} aktiv / ${pendingKvEvents.length} offen`
     : `${activeKvCount} aktiv`;
-  countTargets.homeMario.textContent = `${activeMarioCount} offen`;
-  countTargets.mario.textContent = `${marioEvents.length} gesamt`;
+  countTargets.homeMario.textContent = `${activeMarioCount} aktiv`;
+  countTargets.mario.textContent = `${activeMarioCount} aktiv`;
   renderKvStatusChips(kvEvents);
 }
 
@@ -1288,6 +1339,7 @@ function render() {
   tabButtons.forEach((button) => {
     const isActive = button.dataset.tab === appState.activeTab;
     button.classList.toggle("is-active", isActive);
+    button.toggleAttribute("aria-current", isActive);
   });
 
   Object.entries(panels).forEach(([key, panel]) => {
@@ -1295,11 +1347,6 @@ function render() {
   });
 
   workspace?.classList.toggle("workspace--mario", appState.activeTab === "mario");
-
-  if (mobileNav && mobileToggle) {
-    mobileNav.hidden = !appState.mobileNavOpen;
-    mobileToggle.setAttribute("aria-expanded", String(appState.mobileNavOpen));
-  }
 
   renderCounts();
   renderHomeList("kv");
@@ -1378,6 +1425,25 @@ function readEditorDraft() {
     archived: systemFlags.archived,
     crossPublish: editorElements.fields.crossPublish.checked
   };
+}
+
+function getDraftSignature(draft) {
+  return JSON.stringify(draft);
+}
+
+function clearEditorFieldErrors() {
+  editorElements.form?.querySelectorAll(".has-error").forEach((field) => {
+    field.classList.remove("has-error");
+  });
+}
+
+function focusEditorField(fieldId) {
+  if (!fieldId) return;
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  field.classList.add("has-error");
+  field.scrollIntoView({ behavior: "smooth", block: "center" });
+  field.focus();
 }
 
 function applyEditorStepVisibility() {
@@ -1536,15 +1602,25 @@ function openEditor(type, eventId = null) {
   editorElements.heading.textContent = eventId ? "Eintrag aktualisieren" : "Eintrag anlegen";
   fillEditorForm(draft);
   editorElements.fields.crossPublish.checked = !!linkedTargetId;
+  editorState.initialDraftSignature = getDraftSignature(readEditorDraft());
   if (type === "kv") updateKvImagePreview(draft.bild || "");
   render();
 }
 
 function closeEditor(force = false) {
   if (editorState.saving && !force) return;
+  if (!force && editorState.open) {
+    const hasUnsavedChanges = getDraftSignature(readEditorDraft()) !== editorState.initialDraftSignature;
+    if (hasUnsavedChanges && !window.confirm("Änderungen verwerfen? Deine Eingaben im Editor gehen sonst verloren.")) {
+      return;
+    }
+  }
+
+  clearEditorFieldErrors();
   editorState.open = false;
   editorState.saving = false;
   editorState.eventId = null;
+  editorState.initialDraftSignature = "";
   editorPublishState.targetType = null;
   editorPublishState.targetId = null;
   render();
@@ -1636,22 +1712,23 @@ function maybeShowKvReminder() {
 }
 
 function validateDraft(type, draft) {
-  if (!draft.titel) return "Bitte einen Titel eintragen.";
-  if (!draft.datum) return "Bitte ein Datum auswählen.";
+  if (!draft.titel) return { message: "Bitte einen Titel eintragen.", fieldId: "editor-fTitel" };
+  if (!draft.datum) return { message: "Bitte ein Datum auswählen.", fieldId: "editor-fDatum" };
   if (type === "mario" && draft.link && !/^https?:\/\//i.test(draft.link)) {
-    return "Mario-Links müssen mit http:// oder https:// beginnen.";
+    return { message: "Mario-Links müssen mit http:// oder https:// beginnen.", fieldId: "editor-fLink" };
   }
   if (draft.bild && !/^(https?:\/\/|data:image\/)/i.test(draft.bild)) {
-    return "Die Bild-URL muss mit http:// oder https:// beginnen.";
+    return { message: "Die Bild-URL muss mit http:// oder https:// beginnen.", fieldId: "editor-fBild" };
   }
-  return "";
+  return { message: "", fieldId: "" };
 }
 
 async function saveCurrentEditor() {
   const draft = readEditorDraft();
   const validationError = validateDraft(editorState.type, draft);
-  if (validationError) {
-    showToast("Speichern noch nicht möglich", validationError, "error");
+  if (validationError.message) {
+    showToast("Speichern noch nicht möglich", validationError.message, "error");
+    focusEditorField(validationError.fieldId);
     return;
   }
 
@@ -1690,7 +1767,7 @@ async function saveCurrentEditor() {
 
     setSelectedId(sourceType, eventId);
     setActiveTab(sourceType);
-    setMobileNavOpen(false);
+    clearEditorFieldErrors();
     closeEditor(true);
     const needsKvTicketReminder = sourceType === "kv" && draft.aktiv && !draft.ticketFormDone;
     showToast(
@@ -1831,7 +1908,6 @@ function jumpToLinkedEvent(sourceType, sourceEventId) {
 
   setSelectedId(linkedTarget.type, linkedTarget.id);
   setActiveTab(linkedTarget.type);
-  setMobileNavOpen(false);
   render();
 }
 
@@ -1967,7 +2043,6 @@ function handleActionClick(actionTrigger) {
     if (appState.activeTab === "home") {
       setActiveTab(type);
     }
-    setMobileNavOpen(false);
     render();
     return;
   }
@@ -2104,14 +2179,8 @@ function bindEvents() {
   tabButtons.forEach((button) => {
     button.addEventListener("click", () => {
       setActiveTab(button.dataset.tab);
-      setMobileNavOpen(false);
       render();
     });
-  });
-
-  mobileToggle?.addEventListener("click", () => {
-    setMobileNavOpen(!appState.mobileNavOpen);
-    render();
   });
 
   headerAlertButton?.addEventListener("click", () => {
@@ -2119,7 +2188,6 @@ function bindEvents() {
     if (!target) return;
     setSelectedId(target.type, target.eventItem.id);
     setActiveTab(target.type);
-    setMobileNavOpen(false);
     render();
     inspectorStage?.scrollIntoView({ behavior: "smooth", block: "start" });
   });
@@ -2148,6 +2216,9 @@ function bindEvents() {
       showToast("Bild konnte nicht verarbeitet werden", "Bitte eine Bild-URL manuell eingeben.", "error");
     }
   });
+  editorElements.imgPreview?.addEventListener("click", () => {
+    editorElements.fields.bildFile?.click();
+  });
   confirmElements.cancel?.addEventListener("click", () => closeDeleteConfirm());
   confirmElements.deleteSingle?.addEventListener("click", () => {
     void confirmDeleteEvent("single");
@@ -2156,8 +2227,11 @@ function bindEvents() {
     void confirmDeleteEvent(confirmState.linkedId ? "both" : "single");
   });
 
-  editorElements.form?.addEventListener("input", () => {
+  editorElements.form?.addEventListener("input", (event) => {
     if (!editorState.open) return;
+    if (event.target instanceof HTMLElement) {
+      event.target.classList.remove("has-error");
+    }
     if (editorState.type === "mario" && editorElements.fields.linkPreset) {
       const detectedPreset = detectMarioLinkPresetFromValues();
       if (editorElements.fields.linkPreset.value !== detectedPreset) {
@@ -2272,5 +2346,3 @@ function init() {
 }
 
 init();
-
-
