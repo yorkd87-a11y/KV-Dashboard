@@ -5,5 +5,13 @@
   "display": "standalone",
   "background_color": "#0f172a",
   "theme_color": "#111827",
-  "lang": "de"
+  "lang": "de",
+  "icons": [
+    {
+      "src": "./assets/icons/dashboard-icon.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }
