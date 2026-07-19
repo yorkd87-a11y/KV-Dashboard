@@ -1955,6 +1955,67 @@
 }
 
 /* =====================================================
+   ACCESS CODE
+   ===================================================== */
+
+.access-code-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1300;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.access-code-modal[hidden] {
+  display: none;
+}
+
+.access-code-panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 400px);
+  padding: 32px;
+  border-radius: 28px;
+  background: rgba(248, 245, 239, 0.99);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
+  border-top: 3px solid rgba(197, 155, 61, 0.55);
+}
+
+.access-code-panel .eyebrow {
+  color: var(--warm-deep);
+}
+
+.access-code-panel h2 {
+  margin: 4px 0 10px;
+  font-family: var(--font-display);
+  font-size: 1.32rem;
+}
+
+.access-code-panel .support-copy {
+  color: #475467;
+  line-height: 1.65;
+}
+
+.access-code-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.access-code-form .primary-button {
+  width: 100%;
+}
+
+.access-code-error {
+  margin: -4px 0 0;
+  color: #b42318;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* =====================================================
    TOAST
    ===================================================== */
 

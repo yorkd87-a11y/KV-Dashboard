@@ -8,9 +8,9 @@
   <link rel="manifest" href="./manifest.json">
   <link rel="icon" type="image/png" href="./assets/icons/dashboard-icon.png">
   <link rel="apple-touch-icon" href="./assets/icons/dashboard-icon.png">
-  <link rel="stylesheet" href="./styles/base.css?v=20260719-25">
-  <link rel="stylesheet" href="./styles/app.css?v=20260719-25">
-  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-25">
+  <link rel="stylesheet" href="./styles/base.css?v=20260719-26">
+  <link rel="stylesheet" href="./styles/app.css?v=20260719-26">
+  <link rel="stylesheet" href="./styles/mobile.css?v=20260719-26">
 </head>
 <body>
   <div class="app-shell">
@@ -441,9 +441,26 @@
     </section>
   </div>
 
+  <div class="access-code-modal" id="accessCodeModal" hidden>
+    <div class="editor-backdrop"></div>
+    <section class="access-code-panel" role="dialog" aria-modal="true" aria-labelledby="accessCodeHeading">
+      <p class="eyebrow">Interner Bereich</p>
+      <h2 id="accessCodeHeading">Dashboard öffnen</h2>
+      <p class="support-copy">Bitte gib den gemeinsamen Zugangscode ein.</p>
+      <form class="access-code-form" id="accessCodeForm">
+        <label class="form-field" for="accessCodeInput">
+          <span>Zugangscode</span>
+          <input id="accessCodeInput" type="password" autocomplete="current-password" autocapitalize="off" spellcheck="false" required>
+        </label>
+        <p class="access-code-error" id="accessCodeError" role="alert" hidden>Der Zugangscode ist nicht korrekt.</p>
+        <button class="primary-button" type="submit">Öffnen</button>
+      </form>
+    </section>
+  </div>
+
   <div class="toast-host" id="toastHost" aria-live="polite" aria-atomic="true"></div>
 
-  <script src="./push-config.js?v=20260719-25"></script>
-  <script type="module" src="./scripts/app.js?v=20260719-25"></script>
+  <script src="./push-config.js?v=20260719-26"></script>
+  <script type="module" src="./scripts/app.js?v=20260719-26"></script>
 </body>
 </html>

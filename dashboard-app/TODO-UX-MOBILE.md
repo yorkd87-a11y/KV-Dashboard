@@ -197,6 +197,9 @@ Betroffene Dateien liegen alle in `dashboard-app/`:
 ### [x] Homescreen-Anleitung bei Browser-Aufruf
 - Mobile Browser erkennen und beim ersten Aufruf sowie nach sieben Tagen erneut eine iPhone-/Android-Anleitung anzeigen. Bereits installierte Homescreen-Apps überspringen den Hinweis automatisch.
 
+### [x] Gemeinsamer Zugangscode ohne Benutzerkonto
+- Das Dashboard bleibt bis zur korrekten Eingabe des Zugangscodes geschlossen. Die Freigabe wird nur auf dem jeweiligen Gerät gespeichert.
+
 ## Reihenfolge-Empfehlung
 1. **Paket A (größter Effekt):** Punkt 1, 2, 3
 2. **Paket B (schnelle Fixes, ca. 20 Zeilen):** Punkt 10, 11, 13

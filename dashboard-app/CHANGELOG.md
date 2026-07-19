@@ -2,6 +2,23 @@
 
 Alle nennenswerten Änderungen am KV Dashboard (`dashboard-app/`). Versionsnummern entsprechen `version.json` bzw. der `?v=`-Query an den Asset-Links in `index.html` — genau das, was die Auto-Update-Erkennung in der App vergleicht.
 
+## [20260719-26] – 2026-07-19
+
+### Neu
+- Gemeinsamer Zugangscode ohne Benutzerkonto: Das Dashboard wird erst nach korrekter Eingabe geöffnet und merkt sich die Freigabe auf dem jeweiligen Gerät.
+
+## [20260719-25] – 2026-07-19
+
+### Neu
+- Freiwillige Push-Erinnerungen für installierte Homescreen-Apps: aktivierte Geräte erhalten bei offenen Aufgaben höchstens alle vier Tage eine Erinnerung.
+- Zusätzliche Ablauf-Erinnerung: Einen Tag nach einem beendeten Event wird einmalig auf offene Nacharbeiten hingewiesen.
+- Einmalige Homescreen-Anleitung für iPhone/iPad und Android mit passenden Schritten zum Hinzufügen der App.
+
+### Geändert
+- Die Homescreen-Anleitung erkennt installierte Web-Apps und wird dort nicht angezeigt. Bei weiterem Browser-Aufruf erscheint sie nach sieben Tagen erneut.
+- Nach erfolgreicher Aktivierung von Push-Erinnerungen wird der Hinweisbereich ausgeblendet.
+- Veranstaltungen mit vergangenem Datum werden einheitlich als „Beendet“ geführt, nicht als pausiert.
+
 ## [20260719-8] – 2026-07-19
 
 ### Geändert

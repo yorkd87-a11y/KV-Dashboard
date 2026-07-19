@@ -23,6 +23,8 @@ const TOAST_AUTO_CLOSE_MS = 5000;
 const PUSH_TOKEN_STORAGE_KEY = "dashboard-push-token";
 const HOMESCREEN_GUIDE_STORAGE_KEY = "dashboard-homescreen-guide-shown";
 const HOMESCREEN_GUIDE_REPEAT_MS = 7 * 24 * 60 * 60 * 1000;
+const ACCESS_CODE_STORAGE_KEY = "dashboard-access-granted";
+const ACCESS_CODE_HASH = "11a01406156853a60cd662df6110b7749b8bd581a1e5ec3d10ea904a0c5072ed";
 const PUSH_FUNCTION_REGION = "europe-west3";
 const pushConfig = globalThis.DASHBOARD_PUSH_CONFIG || {};
 
@@ -78,6 +80,12 @@ const homescreenGuideElements = {
   modal: document.getElementById("homescreenGuide"),
   close: document.getElementById("homescreenGuideClose")
 };
+const accessCodeElements = {
+  modal: document.getElementById("accessCodeModal"),
+  form: document.getElementById("accessCodeForm"),
+  input: document.getElementById("accessCodeInput"),
+  error: document.getElementById("accessCodeError")
+};
 const confirmElements = {
   modal: document.getElementById("confirmModal"),
   message: document.getElementById("confirmMessage"),
@@ -91,6 +99,7 @@ let pushToken = localStorage.getItem(PUSH_TOKEN_STORAGE_KEY) || "";
 let pushSetupError = false;
 let pushSetupInProgress = false;
 let pushMessagingRegistration = null;
+let dashboardInitialized = false;
 
 const editorElements = {
   modal: document.getElementById("editorModal"),
@@ -2383,6 +2392,7 @@ function bindEvents() {
   createMarioButton?.addEventListener("click", () => openEditor("mario"));
   pushElements.action?.addEventListener("click", () => void enablePushReminders());
   homescreenGuideElements.close?.addEventListener("click", closeHomescreenGuide);
+  accessCodeElements.form?.addEventListener("submit", (event) => void submitAccessCode(event));
 
   editorElements.close?.addEventListener("click", closeEditor);
   editorElements.cancel?.addEventListener("click", closeEditor);
@@ -2525,6 +2535,71 @@ function initUpdateCheck() {
   window.addEventListener("pageshow", () => checkForUpdate());
 
   setInterval(checkForUpdate, UPDATE_CHECK_INTERVAL_MS);
+}
+
+async function hashAccessCode(accessCode) {
+  const buffer = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(accessCode));
+  return Array.from(new Uint8Array(buffer), (value) => value.toString(16).padStart(2, "0")).join("");
+}
+
+function showAccessCodeDialog() {
+  if (!accessCodeElements.modal) return;
+  accessCodeElements.modal.hidden = false;
+  requestAnimationFrame(() => accessCodeElements.input?.focus());
+}
+
+function startDashboard() {
+  if (dashboardInitialized) return;
+  dashboardInitialized = true;
+  initConnectivityStatus();
+  initHomescreenGuide();
+  void initPushReminders();
+  initData();
+  render();
+  initUpdateCheck();
+}
+
+async function submitAccessCode(event) {
+  event.preventDefault();
+  const accessCode = accessCodeElements.input?.value || "";
+  if (accessCodeElements.error) accessCodeElements.error.hidden = true;
+
+  try {
+    const accessCodeHash = await hashAccessCode(accessCode);
+    if (accessCodeHash !== ACCESS_CODE_HASH) {
+      if (accessCodeElements.error) accessCodeElements.error.hidden = false;
+      if (accessCodeElements.input) {
+        accessCodeElements.input.value = "";
+        accessCodeElements.input.focus();
+      }
+      return;
+    }
+
+    try {
+      localStorage.setItem(ACCESS_CODE_STORAGE_KEY, "true");
+    } catch {
+      // The dashboard still opens when browser storage is unavailable.
+    }
+    if (accessCodeElements.modal) accessCodeElements.modal.hidden = true;
+    startDashboard();
+  } catch {
+    if (accessCodeElements.error) {
+      accessCodeElements.error.textContent = "Der Zugangscode konnte nicht geprüft werden.";
+      accessCodeElements.error.hidden = false;
+    }
+  }
+}
+
+function initAccessCode() {
+  try {
+    if (localStorage.getItem(ACCESS_CODE_STORAGE_KEY) === "true") {
+      startDashboard();
+      return;
+    }
+  } catch {
+    // Fall through and request the code for browsers without local storage.
+  }
+  showAccessCodeDialog();
 }
 
 function isHomescreenApp() {
@@ -2720,12 +2795,7 @@ async function initPushReminders() {
 
 function init() {
   bindEvents();
-  initConnectivityStatus();
-  initHomescreenGuide();
-  void initPushReminders();
-  initData();
-  render();
-  initUpdateCheck();
+  initAccessCode();
 }
 
 init();
